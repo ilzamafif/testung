@@ -384,47 +384,67 @@
     }
 
     // Render category cards
-    function renderCategoryCards() {
-        const expenses = getMonthData(currentMonth);
-        let html = '';
+function renderCategoryCards() {
+    const expenses = getMonthData(currentMonth);
+    let html = '';
+    
+    Object.keys(CATEGORIES).forEach(category => {
+        const cat = CATEGORIES[category];
+        const spent = expenses
+            .filter(e => e.category === category)
+            .reduce((sum, e) => sum + e.amount, 0);
+        const percentage = Math.min((spent / cat.budget) * 100, 100);
+        const remaining = cat.budget - spent;
         
-        Object.keys(CATEGORIES).forEach(category => {
-            const cat = CATEGORIES[category];
-            const spent = expenses
-                .filter(e => e.category === category)
-                .reduce((sum, e) => sum + e.amount, 0);
-            const percentage = Math.min((spent / cat.budget) * 100, 100);
-            const remaining = cat.budget - spent;
-            
-            let progressColor = 'success';
-            if (percentage >= 100) progressColor = 'danger';
-            else if (percentage >= 80) progressColor = 'warning';
-            
-            html += `
-                <div class="col-md-4 col-sm-6">
-                    <div class="card category-card" style="border-top: 4px solid ${cat.color}">
-                        <div class="card-body text-center">
-                            <div class="category-icon" style="color: ${cat.color}">
-                                <i class="bi ${cat.icon}"></i>
-                            </div>
-                            <h6 class="fw-bold">${category}</h6>
-                            <p class="mb-2">
-                                <span class="fw-bold">${formatCurrency(spent)}</span> / ${formatCurrency(cat.budget)}
-                            </p>
-                            <div class="progress mb-2">
-                                <div class="progress-bar bg-${progressColor}" style="width: ${percentage}%"></div>
-                            </div>
-                            <p class="budget-status text-${progressColor} mb-0">
-                                ${percentage >= 100 ? 'Over Budget!' : `Sisa: ${formatCurrency(remaining)}`}
-                            </p>
+        let progressColor = 'success';
+        if (percentage >= 100) progressColor = 'danger';
+        else if (percentage >= 80) progressColor = 'warning';
+        
+        html += `
+            <div class="col-md-4 col-sm-6">
+                <div class="card category-card" style="border-top: 4px solid ${cat.color}">
+                    <div class="card-body text-center">
+                        <div class="category-icon" style="color: ${cat.color}">
+                            <i class="bi ${cat.icon}"></i>
                         </div>
+                        <h6 class="fw-bold">${category}</h6>
+                        <p class="mb-2">
+                            <span class="fw-bold">${formatCurrency(spent)}</span> / ${formatCurrency(cat.budget)}
+                        </p>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-${progressColor}" style="width: ${percentage}%"></div>
+                        </div>
+                        <p class="budget-status text-${progressColor} mb-0">
+                            ${percentage >= 100 ? 'Over Budget!' : `Sisa: ${formatCurrency(remaining)}`}
+                        </p>
+                        ${percentage < 100 ? `
+                            <small class="text-muted d-block mt-1">
+                                <i class="bi bi-calendar-day"></i> ${calculateDailyAverage(remaining)}
+                            </small>
+                        ` : ''}
                     </div>
                 </div>
-            `;
-        });
-        
-        $('#categoryCards').html(html);
+            </div>
+        `;
+    });
+    
+    $('#categoryCards').html(html);
+}
+
+    function calculateDailyAverage(remaining) {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const remainingDays = lastDay - currentDay;
+    
+    if (remainingDays <= 0) {
+        return 'Bulan ini berakhir hari ini';
     }
+    
+    const dailyAverage = Math.floor(remaining / remainingDays);
+    
+    return `~${formatCurrency(dailyAverage)}/hari (${remainingDays} hari lagi)`;
+}
 
     // Update dashboard summary
     function updateDashboard() {
