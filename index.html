@@ -311,14 +311,15 @@
 
 <script>
     // Configuration
-    const CATEGORIES = {
-        'Tempat Tinggal': { budget: 400000, color: '#dc2626', icon: 'bi-house-door' },
-        'Makan': { budget: 450000, color: '#1f2937', icon: 'bi-egg-fried' },
-        'Kuota': { budget: 100000, color: '#3b82f6', icon: 'bi-wifi' },
-        'Minum': { budget: 25000, color: '#10b981', icon: 'bi-cup-straw' },
-        'Transport': { budget: 75000, color: '#f97316', icon: 'bi-bus-front' },
-        'Laundry': { budget: 50000, color: '#a855f7', icon: 'bi-water' }
-    };
+   const CATEGORIES = {
+    'Tempat Tinggal': { budget: 400000, color: '#dc2626', icon: 'bi-house-door' },
+    'Makan': { budget: 450000, color: '#1f2937', icon: 'bi-egg-fried' },
+    'Kuota': { budget: 100000, color: '#3b82f6', icon: 'bi-wifi' },
+    'Minum': { budget: 25000, color: '#10b981', icon: 'bi-cup-straw' },
+    'Transport': { budget: 75000, color: '#f97316', icon: 'bi-bus-front' },
+    'Laundry': { budget: 50000, color: '#a855f7', icon: 'bi-water' },
+    'Lain-lain': { budget: 100000, color: '#6366f1', icon: 'bi-basket' }  // ← TAMBAH BARIS INI
+};
 
     let currentMonth = new Date().toISOString().slice(0, 7);
     let expenseChart = null;
