@@ -143,32 +143,34 @@
     <!-- Overall Summary -->
     <div class="card mb-4">
         <div class="card-body">
-            <div class="row text-center">
-                <div class="col-md-4">
-                    <p class="text-muted mb-1">Total Pengeluaran</p>
-                    <p class="stat-value text-primary" id="totalExpense">Rp 0</p>
-                </div>
-                <div class="col-md-4">
-                    <p class="text-muted mb-1">Total Target</p>
-                    <p class="stat-value text-secondary">Rp 1.100.000</p>
-                </div>
-                <div class="col-md-4">
-                    <p class="text-muted mb-1">Nabung </p>
-                    <p class="stat-value text-secondary">Rp 500.000</p>
-                </div>
-                <div class="col-md-4">
-                    <p class="text-muted mb-1">+ekstra</p>
-                    <p class="stat-value text-secondary">Rp 390000</p>
-                </div>
-                <div class="col-md-4">
-                    <p class="text-muted mb-1">Sisa Budget</p>
-                    <p class="stat-value text-success" id="remainingBudget">Rp 1.100.000</p>
-                </div>
-                
-            </div>
-            <div class="progress mt-3" style="height: 15px;">
-                <div class="progress-bar" id="overallProgress" role="progressbar" style="width: 0%"></div>
-            </div>
+           <div class="row text-center">
+    <div class="col-md-3">
+        <p class="text-muted mb-1">Budget Tetap</p>
+        <p class="stat-value text-secondary">Rp 1.100.000</p>
+        <small class="text-muted" id="fixedSpent">Terpakai: Rp 0</small>
+    </div>
+    <div class="col-md-3">
+        <p class="text-muted mb-1">Budget Extra</p>
+        <p class="stat-value text-info">Rp 390.000</p>
+        <small class="text-muted" id="extraSpent">Terpakai: Rp 0</small>
+    </div>
+    <div class="col-md-3">
+        <p class="text-muted mb-1">Total Pengeluaran</p>
+        <p class="stat-value text-primary" id="totalExpense">Rp 0</p>
+    </div>
+    <div class="col-md-3">
+        <p class="text-muted mb-1">Sisa Total</p>
+        <p class="stat-value text-success" id="remainingBudget">Rp 1.490.000</p>
+    </div>
+</div>
+       <div class="progress mt-3" style="height: 20px;">
+    <div class="progress-bar bg-secondary" id="fixedProgress" role="progressbar" style="width: 0%">
+        <small>Tetap</small>
+    </div>
+    <div class="progress-bar bg-info" id="extraProgress" role="progressbar" style="width: 0%">
+        <small>Extra</small>
+    </div>
+</div>
         </div>
     </div>
 
@@ -321,13 +323,13 @@
 <script>
     // Configuration
    const CATEGORIES = {
-    'Tempat Tinggal': { budget: 400000, color: '#dc2626', icon: 'bi-house-door' },
-    'Makan': { budget: 450000, color: '#1f2937', icon: 'bi-egg-fried' },
-    'Kuota': { budget: 100000, color: '#3b82f6', icon: 'bi-wifi' },
-    'Minum': { budget: 25000, color: '#10b981', icon: 'bi-cup-straw' },
-    'Transport': { budget: 75000, color: '#f97316', icon: 'bi-bus-front' },
-    'Laundry': { budget: 50000, color: '#a855f7', icon: 'bi-water' },
-    'Lain-lain': { budget: 100000, color: '#6366f1', icon: 'bi-basket' }  // ← TAMBAH BARIS INI
+    'Tempat Tinggal': { budget: 400000, color: '#dc2626', icon: 'bi-house-door', type: 'fixed' },
+    'Makan': { budget: 450000, color: '#1f2937', icon: 'bi-egg-fried', type: 'fixed' },
+    'Kuota': { budget: 100000, color: '#3b82f6', icon: 'bi-wifi', type: 'fixed' },
+    'Minum': { budget: 25000, color: '#10b981', icon: 'bi-cup-straw', type: 'fixed' },
+    'Transport': { budget: 75000, color: '#f97316', icon: 'bi-bus-front', type: 'fixed' },
+    'Laundry': { budget: 50000, color: '#a855f7', icon: 'bi-water', type: 'fixed' },
+    'Lain-lain': { budget: 390000, color: '#6366f1', icon: 'bi-basket', type: 'extra' }  // ← TAMBAH INI
 };
 
     let currentMonth = new Date().toISOString().slice(0, 7);
@@ -458,19 +460,49 @@ function renderCategoryCards() {
 
     // Update dashboard summary
     function updateDashboard() {
-        const expenses = getMonthData(currentMonth);
-        const totalBudget = Object.values(CATEGORIES).reduce((sum, cat) => sum + cat.budget, 0);
-        const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
-        const remaining = totalBudget - totalSpent;
-        const percentage = Math.min((totalSpent / totalBudget) * 100, 100);
-        
-        $('#totalExpense').text(formatCurrency(totalSpent));
-        $('#remainingBudget').text(formatCurrency(remaining));
-        $('#overallProgress').css('width', percentage + '%')
-            .toggleClass('bg-danger', percentage >= 100)
-            .toggleClass('bg-warning', percentage >= 80 && percentage < 100)
-            .toggleClass('bg-success', percentage < 80);
-    }
+    const expenses = getMonthData(currentMonth);
+    
+    // Separate fixed and extra expenses
+    let fixedSpent = 0;
+    let extraSpent = 0;
+    
+    expenses.forEach(e => {
+        const cat = CATEGORIES[e.category];
+        if (cat && cat.type === 'extra') {
+            extraSpent += e.amount;
+        } else {
+            fixedSpent += e.amount;
+        }
+    });
+    
+    const fixedBudget = 1100000;
+    const extraBudget = 390000;
+    const totalBudget = fixedBudget + extraBudget;
+    const totalSpent = fixedSpent + extraSpent;
+    const remaining = totalBudget - totalSpent;
+    
+    // Update displays
+    $('#fixedSpent').text('Terpakai: ' + formatCurrency(fixedSpent));
+    $('#extraSpent').text('Terpakai: ' + formatCurrency(extraSpent));
+    $('#totalExpense').text(formatCurrency(totalSpent));
+    $('#remainingBudget').text(formatCurrency(remaining));
+    
+    // Update separate progress bars
+    const fixedPercentage = Math.min((fixedSpent / fixedBudget) * 100, 100);
+    const extraPercentage = Math.min((extraSpent / extraBudget) * 100, 100);
+    
+    $('#fixedProgress').css('width', (fixedBudget / totalBudget * 100) + '%');
+    $('#extraProgress').css('width', (extraBudget / totalBudget * 100) + '%');
+    
+    // Color based on usage
+    $('#fixedProgress')
+        .removeClass('bg-danger bg-warning bg-secondary')
+        .addClass(fixedPercentage >= 100 ? 'bg-danger' : (fixedPercentage >= 80 ? 'bg-warning' : 'bg-secondary'));
+    
+    $('#extraProgress')
+        .removeClass('bg-danger bg-warning bg-info')
+        .addClass(extraPercentage >= 100 ? 'bg-danger' : (extraPercentage >= 80 ? 'bg-warning' : 'bg-info'));
+}
 
     // Render transactions
     function renderTransactions() {
