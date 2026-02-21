@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitTrack — Badan Sehat Atletis Tanpa Gym</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0f0a;--card:#0f1a0f;--card2:#162016;--border:#1e3020;
+  --accent:#22c55e;--accent2:#16a34a;--gold:#f59e0b;--blue:#3b82f6;
+  --red:#ef4444;--text:#e2e8f0;--muted:#64748b;--white:#fff;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
+.hero{background:linear-gradient(135deg,#071407 0%,#0d2b10 50%,#071407 100%);padding:48px 24px 36px;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(34,197,94,.12) 0%,transparent 70%)}
+.hero-badge{display:inline-block;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#86efac;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:16px}
+.hero h1{font-size:clamp(22px,5vw,40px);font-weight:800;background:linear-gradient(135deg,#fff 30%,#86efac);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.2}
+.hero p{color:var(--muted);margin-top:8px;font-size:14px}
+.hero-stats{display:flex;justify-content:center;gap:28px;margin-top:24px;flex-wrap:wrap}
+.stat{text-align:center}
+.stat-num{font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.progress-bar-wrap{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;position:sticky;top:0;z-index:100}
+.progress-inner{max-width:920px;margin:0 auto}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.progress-label{font-size:13px;font-weight:600}
+.progress-pct{font-size:13px;font-weight:700;color:var(--accent)}
+.pbar{height:7px;background:#1a2e1a;border-radius:8px;overflow:hidden}
+.pbar-fill{height:100%;background:linear-gradient(90deg,var(--accent),#86efac);border-radius:8px;transition:width .4s ease}
+.tabs{display:flex;gap:4px;padding:18px 24px 0;max-width:920px;margin:0 auto;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:8px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;border-bottom:none;white-space:nowrap;transition:all .2s;color:var(--muted);background:transparent}
+.tab.active{background:var(--card);border-color:var(--border);color:var(--white)}
+.tab:hover:not(.active){color:var(--text);background:rgba(255,255,255,.04)}
+.main{max-width:920px;margin:0 auto;padding:0 24px 48px}
+.section{display:none;animation:fadeIn .3s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.card-title{font-size:16px;font-weight:700}
+.card-sub{font-size:12px;color:var(--muted);margin-top:2px}
+input,textarea,select{width:100%;background:#071407;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;resize:vertical}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:none}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.alert{padding:14px 16px;border-radius:10px;font-size:13px;line-height:1.6;display:flex;gap:10px;margin-bottom:16px}
+.alert-warning{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fcd34d}
+.alert-info{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#86efac}
+.alert-blue{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);color:#93c5fd}
+/* SMART */
+.smart-row{display:grid;grid-template-columns:70px 1fr;gap:14px;align-items:start;margin-bottom:14px}
+.smart-label{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--accent),#86efac);-webkit-background-clip:text;-webkit-text-fill-color:transparent;padding-top:10px}
+.smart-content{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px}
+.smart-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.smart-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px}
+.goal-preview{background:linear-gradient(135deg,rgba(34,197,94,.1),rgba(22,163,74,.1));border:1px solid rgba(34,197,94,.3);border-radius:12px;padding:20px;margin-top:20px;text-align:center}
+.goal-preview-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.goal-preview-text{font-size:15px;font-weight:700;color:#86efac;line-height:1.6}
+/* REWARD */
+.reward-row{display:grid;grid-template-columns:80px 1fr 110px;gap:10px;align-items:center;margin-bottom:8px}
+.week-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;text-align:center}
+/* CHEATSHEET */
+.step-group{margin-bottom:22px}
+.step-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.step-group-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.step-item{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border-radius:10px;cursor:pointer;transition:all .2s;border:1px solid transparent;margin-bottom:5px}
+.step-item:hover{background:var(--card2);border-color:var(--border)}
+.step-item.done{background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.2)}
+.step-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .2s;font-size:12px}
+.step-item.done .step-check{background:var(--accent);border-color:var(--accent);color:#fff}
+.step-num{font-size:10px;font-weight:700;color:var(--muted);width:20px;flex-shrink:0;margin-top:3px}
+.step-text{font-size:13px;font-weight:500;line-height:1.5}
+.step-item.done .step-text{color:var(--muted);text-decoration:line-through}
+/* WORKOUT */
+.wk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.wk-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:18px}
+.wk-day{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+.wk-name{font-size:15px;font-weight:700;margin-bottom:10px}
+.wk-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.wk-item:last-child{border:none}
+.wk-sets{font-size:11px;font-weight:600;color:var(--accent);background:rgba(34,197,94,.1);padding:2px 8px;border-radius:4px}
+/* NUTRITION */
+.nut-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.nut-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.nut-icon{font-size:24px;margin-bottom:8px}
+.nut-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.nut-desc{font-size:11px;color:var(--muted);line-height:1.5}
+/* LOG */
+.log-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--card2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:13px}
+.log-date{color:var(--muted);font-size:11px}
+.phase-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.phase-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:18px;transition:border-color .2s}
+.phase-card:hover{border-color:var(--accent)}
+.phase-num{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.phase-name{font-size:14px;font-weight:700;margin-bottom:6px}
+.phase-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.phase-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:8px}
+.quote-box{background:linear-gradient(135deg,rgba(7,20,7,1),rgba(13,43,16,.8));border:1px solid rgba(34,197,94,.2);border-radius:16px;padding:24px;text-align:center;margin-bottom:20px}
+.quote-text{font-size:14px;font-style:italic;color:#86efac;line-height:1.7;margin-bottom:10px}
+.quote-author{font-size:12px;font-weight:700;color:var(--gold)}
+@media(max-width:600px){.smart-row{grid-template-columns:50px 1fr}.reward-row{grid-template-columns:60px 1fr 80px}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">💪 Self Development</div>
+  <h1>Badan Sehat & Atletis<br>Tanpa Gym</h1>
+  <p>Calisthenics + Nutrisi + Mindset — Sistem 12 Minggu Terstruktur</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">Fase</div></div>
+    <div class="stat"><div class="stat-num">30</div><div class="stat-label">Steps</div></div>
+    <div class="stat"><div class="stat-num">12</div><div class="stat-label">Minggu</div></div>
+    <div class="stat"><div class="stat-num" id="heroProgress">0%</div><div class="stat-label">Progress</div></div>
+  </div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-inner">
+    <div class="progress-top">
+      <span class="progress-label">Progress Keseluruhan</span>
+      <span class="progress-pct" id="progressPct">0 / 30 langkah</span>
+    </div>
+    <div class="pbar"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="overview">🏠 Overview</div>
+  <div class="tab" data-tab="smartgoal">🎯 Smart Goal</div>
+  <div class="tab" data-tab="reward">🎁 Reward</div>
+  <div class="tab" data-tab="workout">💪 Program Latihan</div>
+  <div class="tab" data-tab="nutrisi">🥗 Nutrisi</div>
+  <div class="tab" data-tab="cheatsheet">✅ Cheatsheet</div>
+  <div class="tab" data-tab="log">📊 Daily Log</div>
+</div>
+
+<div class="main">
+
+<!-- OVERVIEW -->
+
+<div class="section active" id="tab-overview">
+  <div class="quote-box" style="margin-top:20px">
+    <div class="quote-text">"Take care of your body. It's the only place you have to live."</div>
+    <div class="quote-author">— Jim Rohn</div>
+  </div>
+  <div class="alert alert-warning">
+    <span>⚠️</span>
+    <span><strong>Prinsip dasar:</strong> Konsistensi 30 menit/hari mengalahkan sesi 2 jam yang tidak rutin. Ikuti fase secara berurutan dan jangan skip.</span>
+  </div>
+  <div class="phase-grid">
+    <div class="phase-card">
+      <div class="phase-num">Fase 01</div>
+      <div class="phase-name">⚡ Fondasi & Habit</div>
+      <div class="phase-desc">Bentuk kebiasaan gerak, atur pola tidur & makan. Mulai dari yang paling basic.</div>
+      <span class="phase-badge" style="background:rgba(245,158,11,.15);color:#fcd34d">Minggu 1–4</span>
+    </div>
+    <div class="phase-card">
+      <div class="phase-num">Fase 02</div>
+      <div class="phase-name">🔥 Intensitas & Nutrisi</div>
+      <div class="phase-desc">Tingkatkan beban latihan, atur kalori & protein. Mulai lihat perubahan nyata.</div>
+      <span class="phase-badge" style="background:rgba(34,197,94,.15);color:#86efac">Minggu 5–8</span>
+    </div>
+    <div class="phase-card">
+      <div class="phase-num">Fase 03</div>
+      <div class="phase-name">🏆 Atletis & Maintenance</div>
+      <div class="phase-desc">Skill movement, endurance, body composition. Bentuk tubuh atletis & pertahankan.</div>
+      <span class="phase-badge" style="background:rgba(59,130,246,.15);color:#93c5fd">Minggu 9–12</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(34,197,94,.15)">💊</div>
+      <div><div class="card-title">3 Productivity Supplements — Versi Fitness</div><div class="card-sub">Sama seperti DMM, berlaku di semua pengembangan diri</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px">
+      <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:16px">
+        <div style="font-size:22px;margin-bottom:8px">💡</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Motivation Pills</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">SMART Goal spesifik: bukan "mau kurus" tapi "berat 68kg, lingkar perut 80cm pada Juli 2025"</div>
+      </div>
+      <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:16px">
+        <div style="font-size:22px;margin-bottom:8px">🎁</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Rewarding Pills</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">Jadikan junk food favorit sebagai reward mingguan setelah konsisten — bukan pelampiasan harian</div>
+      </div>
+      <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:16px">
+        <div style="font-size:22px;margin-bottom:8px">⚡</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Agility Pills</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">Ikuti program terstruktur. Jangan random — setiap gerakan ada tujuannya. Cheatsheet adalah mentormu.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SMART GOAL -->
+
+<div class="section" id="tab-smartgoal">
+  <div class="card" style="margin-top:20px">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(34,197,94,.15)">🎯</div>
+      <div><div class="card-title">Buat SMART Goal Fisikmu</div><div class="card-sub">Spesifik → Terukur → Realistis → Relevan → Berdeadline</div></div>
+    </div>
+    <div class="alert alert-info">
+      <span>💡</span>
+      <span>"Mau sehat" itu abstrak. Otak butuh target konkret seperti GPS — kasih koordinat yang jelas, bukan arah yang samar.</span>
+    </div>
+    <div class="smart-row">
+      <div class="smart-label">S</div>
+      <div class="smart-content">
+        <div class="smart-title">Specific — Apa perubahan fisik yang kamu inginkan?</div>
+        <div class="smart-desc">Contoh: "Badan atletis dengan perut rata dan bahu lebar"</div>
+        <input type="text" id="s_specific" placeholder="Deskripsikan perubahan fisik yang kamu inginkan...">
+      </div>
+    </div>
+    <div class="smart-row">
+      <div class="smart-label">M</div>
+      <div class="smart-content">
+        <div class="smart-title">Measurable — Berapa angka targetmu?</div>
+        <div class="smart-desc">Contoh: berat badan, % body fat, lingkar perut, bisa push-up berapa kali</div>
+        <input type="text" id="s_measurable" placeholder="Contoh: BB 68kg, push-up 30x, body fat 15%">
+      </div>
+    </div>
+    <div class="smart-row">
+      <div class="smart-label">A</div>
+      <div class="smart-content">
+        <div class="smart-title">Attainable — Target 8–12 minggu ke depan?</div>
+        <div class="smart-desc">Perubahan nyata tubuh butuh minimal 8 minggu konsisten. Jangan targetkan hasil 1 tahun dalam 1 bulan.</div>
+        <input type="text" id="s_attainable" placeholder="Konfirmasi: realistis dicapai dalam 12 minggu konsisten">
+      </div>
+    </div>
+    <div class="smart-row">
+      <div class="smart-label">R</div>
+      <div class="smart-content">
+        <div class="smart-title">Relevant — Kenapa ini penting untukmu?</div>
+        <div class="smart-desc">Alasan yang kuat = motivasi yang tahan lama. Contoh: "agar lebih berenergi dan percaya diri"</div>
+        <input type="text" id="s_relevant" placeholder="Tuliskan alasan terdalammu...">
+      </div>
+    </div>
+    <div class="smart-row">
+      <div class="smart-label">T</div>
+      <div class="smart-content">
+        <div class="smart-title">Time-bound — Kapan target ini harus tercapai?</div>
+        <div class="smart-desc">Tetapkan bulan & tahun yang spesifik</div>
+        <input type="text" id="s_time" placeholder="Contoh: September 2025, Desember 2025...">
+      </div>
+    </div>
+    <div class="goal-preview" id="goalPreview" style="display:none">
+      <div class="goal-preview-label">🎯 SMART Goal Fisikmu</div>
+      <div class="goal-preview-text" id="goalText">—</div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" id="generateGoal">✨ Generate Goal</button>
+      <button class="btn btn-outline" id="resetGoal">↺ Reset</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(139,92,246,.15)">📌</div>
+      <div><div class="card-title">Media Afirmasi Fisik — WAJIB</div><div class="card-sub">Lihat setiap hari agar tidak kehilangan arah</div></div>
+    </div>
+    <div style="display:grid;gap:6px">
+      <div class="step-item" onclick="$(this).toggleClass('done');$(this).find('.step-check').text($(this).hasClass('done')?'✓':'')"><div class="step-check"></div><div class="step-text">📱 Foto inspirasi tubuh atletis → jadikan wallpaper HP</div></div>
+      <div class="step-item" onclick="$(this).toggleClass('done');$(this).find('.step-check').text($(this).hasClass('done')?'✓':'')"><div class="step-check"></div><div class="step-text">💻 Tempel SMART Goal di wallpaper PC / cermin kamar</div></div>
+      <div class="step-item" onclick="$(this).toggleClass('done');$(this).find('.step-check').text($(this).hasClass('done')?'✓':'')"><div class="step-check"></div><div class="step-text">📊 Ukur & catat berat badan + lingkar perut hari ini (baseline)</div></div>
+      <div class="step-item" onclick="$(this).toggleClass('done');$(this).find('.step-check').text($(this).hasClass('done')?'✓':'')"><div class="step-check"></div><div class="step-text">📸 Foto kondisi tubuh sekarang — simpan sebagai pembanding</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- REWARD -->
+
+<div class="section" id="tab-reward">
+  <div class="card" style="margin-top:20px">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(34,197,94,.15)">🎁</div>
+      <div><div class="card-title">Rewarding Strategy — Versi Fitness</div><div class="card-sub">Jadikan "cheat day" sebagai reward, bukan kebiasaan</div></div>
+    </div>
+    <div class="alert alert-info">
+      <span>💡</span>
+      <span>Distraksi fitness = makanan favorit, rebahan, skip latihan. Jadikan itu sebagai <strong>hadiah yang harus diraih</strong>, bukan pelarian.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:80px 1fr 110px;gap:10px;margin-bottom:8px;padding:0 2px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Week</div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Reward (apa yang kamu tahan)</div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;text-align:center">Syarat</div>
+    </div>
+    <div class="reward-row"><div><div class="week-badge">Week 1</div></div><input type="text" id="r1" placeholder="Contoh: makan junk food favorit 1x" style="margin:0"><div style="text-align:center;font-size:12px;color:var(--muted)">7 hari latihan</div></div>
+    <div class="reward-row" style="margin-top:8px"><div><div class="week-badge">Week 2</div></div><input type="text" id="r2" placeholder="Contoh: skip 1 sesi latihan (istirahat aktif)" style="margin:0"><div style="text-align:center;font-size:12px;color:var(--muted)">14 hari konsisten</div></div>
+    <div class="reward-row" style="margin-top:8px"><div><div class="week-badge">Week 3</div></div><input type="text" id="r3" placeholder="Contoh: nonton film / gaming seharian" style="margin:0"><div style="text-align:center;font-size:12px;color:var(--muted)">21 hari konsisten</div></div>
+    <div class="reward-row" style="margin-top:8px"><div><div class="week-badge">Week 4</div></div><input type="text" id="r4" placeholder="Contoh: beli outfit olahraga baru" style="margin:0"><div style="text-align:center;font-size:12px;color:var(--muted)">28 hari konsisten</div></div>
+
+```
+<div style="margin-top:20px">
+  <div style="font-size:13px;font-weight:700;margin-bottom:12px">📅 Habit Tracker 28 Hari</div>
+  <div id="dailyChecklist" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+  <div style="display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap">
+    <button class="btn btn-primary" id="startChecklist">▶ Mulai Tracking</button>
+    <button class="btn btn-outline" id="resetChecklist">↺ Reset</button>
+    <span id="dayCount" style="font-size:12px;color:var(--muted)"></span>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- WORKOUT -->
+
+<div class="section" id="tab-workout">
+  <div class="card" style="margin-top:20px">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(34,197,94,.15)">💪</div>
+      <div><div class="card-title">Program Calisthenics 3 Hari/Minggu</div><div class="card-sub">Full body — tanpa alat — bisa di rumah, taman, atau mana saja</div></div>
+    </div>
+    <div class="alert alert-blue">
+      <span>ℹ️</span>
+      <span><strong>Progressive overload:</strong> Setiap minggu tambah 1–2 repetisi atau 1 set. Tubuh hanya berubah jika diberi tantangan yang terus meningkat.</span>
+    </div>
+    <div class="wk-grid">
+      <div class="wk-card">
+        <div class="wk-day">Hari A (Senin / Kamis)</div>
+        <div class="wk-name">🔥 Push + Core</div>
+        <div class="wk-item"><span>Push-up (variasi sesuai level)</span><span class="wk-sets">3–4 × 8–15</span></div>
+        <div class="wk-item"><span>Pike Push-up (bahu)</span><span class="wk-sets">3 × 8–12</span></div>
+        <div class="wk-item"><span>Tricep Dips (kursi/dipan)</span><span class="wk-sets">3 × 10–15</span></div>
+        <div class="wk-item"><span>Plank</span><span class="wk-sets">3 × 30–60 dtk</span></div>
+        <div class="wk-item"><span>Hollow Body Hold</span><span class="wk-sets">3 × 20–30 dtk</span></div>
+        <div class="wk-item"><span>Mountain Climbers</span><span class="wk-sets">3 × 20 rep</span></div>
+      </div>
+      <div class="wk-card">
+        <div class="wk-day">Hari B (Rabu / Sabtu)</div>
+        <div class="wk-name">💎 Pull + Back</div>
+        <div class="wk-item"><span>Pull-up / Australian Pull-up</span><span class="wk-sets">3–4 × 5–10</span></div>
+        <div class="wk-item"><span>Inverted Row (meja/tiang)</span><span class="wk-sets">3 × 10–15</span></div>
+        <div class="wk-item"><span>Superman Hold</span><span class="wk-sets">3 × 15 rep</span></div>
+        <div class="wk-item"><span>Chin-up</span><span class="wk-sets">3 × 5–8</span></div>
+        <div class="wk-item"><span>Dead Hang</span><span class="wk-sets">3 × 20–40 dtk</span></div>
+        <div class="wk-item"><span>Towel Row (kreatif)</span><span class="wk-sets">3 × 12</span></div>
+      </div>
+      <div class="wk-card">
+        <div class="wk-day">Hari C (Jumat / Minggu)</div>
+        <div class="wk-name">⚡ Legs + Cardio</div>
+        <div class="wk-item"><span>Squat (variasi)</span><span class="wk-sets">4 × 15–20</span></div>
+        <div class="wk-item"><span>Bulgarian Split Squat</span><span class="wk-sets">3 × 10 tiap kaki</span></div>
+        <div class="wk-item"><span>Glute Bridge</span><span class="wk-sets">3 × 15–20</span></div>
+        <div class="wk-item"><span>Jumping Jack / Jump Squat</span><span class="wk-sets">3 × 30 dtk</span></div>
+        <div class="wk-item"><span>Lunges</span><span class="wk-sets">3 × 12 tiap kaki</span></div>
+        <div class="wk-item"><span>Burpee</span><span class="wk-sets">3 × 8–10</span></div>
+      </div>
+    </div>
+    <div style="margin-top:16px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">📈 Progression Guide</div>
+      <div style="display:grid;gap:6px;font-size:12px;color:var(--muted)">
+        <div>🟡 <strong style="color:var(--text)">Pemula (Minggu 1–4):</strong> Fokus teknik, full ROM, istirahat 90 dtk antar set</div>
+        <div>🟢 <strong style="color:var(--text)">Intermediate (Minggu 5–8):</strong> Tambah rep/set, kurangi istirahat jadi 60 dtk</div>
+        <div>🔵 <strong style="color:var(--text)">Advanced (Minggu 9–12):</strong> Variasi harder (archer push-up, pistol squat, L-sit)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NUTRISI -->
+
+<div class="section" id="tab-nutrisi">
+  <div class="card" style="margin-top:20px">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(245,158,11,.15)">🥗</div>
+      <div><div class="card-title">Panduan Nutrisi Atletis</div><div class="card-sub">80% hasil fisik ditentukan oleh apa yang kamu makan</div></div>
+    </div>
+    <div class="alert alert-warning">
+      <span>⚠️</span>
+      <span><strong>Rule #1:</strong> Kamu tidak bisa outrun a bad diet. Latihan tanpa nutrisi tepat = ban bocor dipompa terus.</span>
+    </div>
+    <div class="nut-grid">
+      <div class="nut-card"><div class="nut-icon">🥩</div><div class="nut-title">Protein — Prioritas #1</div><div class="nut-desc">1.6–2g per kg berat badan/hari. Sumber: telur, ayam, ikan, tempe, tahu, susu.</div></div>
+      <div class="nut-card"><div class="nut-icon">🍚</div><div class="nut-title">Karbohidrat — Bahan Bakar</div><div class="nut-desc">Nasi, oat, ubi, pisang. Konsumsi lebih banyak di sekitar waktu latihan.</div></div>
+      <div class="nut-card"><div class="nut-icon">🥑</div><div class="nut-title">Lemak Sehat</div><div class="nut-desc">Alpukat, kacang, minyak zaitun, ikan. Penting untuk hormon & recovery.</div></div>
+      <div class="nut-card"><div class="nut-icon">💧</div><div class="nut-title">Hidrasi</div><div class="nut-desc">Minimal 2.5–3 liter/hari. Dehidrasi 2% sudah menurunkan performa 20%.</div></div>
+      <div class="nut-card"><div class="nut-icon">😴</div><div class="nut-title">Tidur — Suplemen Gratis</div><div class="nut-desc">7–9 jam/malam. Otot tumbuh saat tidur, bukan saat latihan.</div></div>
+      <div class="nut-card"><div class="nut-icon">🚫</div><div class="nut-title">Minimalisir</div><div class="nut-desc">Gula berlebih, gorengan rutin, minuman manis, alkohol — semua sabotase progresmu.</div></div>
+    </div>
+    <div style="margin-top:16px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px">🍽️ Contoh Meal Plan Sederhana (Hemat & Atletis)</div>
+      <div style="display:grid;gap:8px;font-size:12px">
+        <div style="display:flex;gap:10px"><span style="color:var(--gold);font-weight:700;width:80px;flex-shrink:0">Sahur/Pagi</span><span style="color:var(--muted)">3 butir telur rebus + nasi/oat + pisang + air putih</span></div>
+        <div style="display:flex;gap:10px"><span style="color:var(--gold);font-weight:700;width:80px;flex-shrink:0">Pre-workout</span><span style="color:var(--muted)">Pisang + 1 gelas air (30 menit sebelum latihan)</span></div>
+        <div style="display:flex;gap:10px"><span style="color:var(--gold);font-weight:700;width:80px;flex-shrink:0">Post-workout</span><span style="color:var(--muted)">Nasi + ayam/ikan + sayur + tempe/tahu (dalam 1 jam)</span></div>
+        <div style="display:flex;gap:10px"><span style="color:var(--gold);font-weight:700;width:80px;flex-shrink:0">Malam</span><span style="color:var(--muted)">Protein tinggi (telur/ikan) + sayuran + hindari karbohidrat berat</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHEATSHEET -->
+
+<div class="section" id="tab-cheatsheet">
+  <div class="card" style="margin-top:20px">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(34,197,94,.15)">✅</div>
+      <div><div class="card-title">Cheatsheet 30 Langkah</div><div class="card-sub">Dari awal hingga tubuh atletis impianmu</div></div>
+    </div>
+    <div id="cheatsheet"></div>
+  </div>
+</div>
+
+<!-- LOG -->
+
+<div class="section" id="tab-log">
+  <div class="card" style="margin-top:20px">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(59,130,246,.15)">📊</div>
+      <div><div class="card-title">Daily Training Log</div><div class="card-sub">Catat setiap sesi — data adalah motivasimu</div></div>
+    </div>
+    <div style="display:grid;gap:10px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Tanggal</div>
+          <input type="date" id="logDate">
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Sesi Latihan</div>
+          <select id="logType">
+            <option>Hari A — Push + Core</option>
+            <option>Hari B — Pull + Back</option>
+            <option>Hari C — Legs + Cardio</option>
+            <option>Rest Day / Recovery</option>
+            <option>Cardio Ringan (jalan/lari)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Durasi (menit)</div>
+          <input type="number" id="logDuration" placeholder="30">
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Energi (1–5 ⭐)</div>
+          <select id="logEnergy">
+            <option>5 ⭐ — Luar biasa</option>
+            <option>4 ⭐ — Bagus</option>
+            <option>3 ⭐ — Cukup</option>
+            <option>2 ⭐ — Berat</option>
+            <option>1 ⭐ — Sangat berat</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Catatan (PR baru, perasaan, dll)</div>
+        <textarea id="logNote" rows="2" placeholder="Contoh: push-up 3×15, naik dari kemarin 3×12. Energi bagus!"></textarea>
+      </div>
+      <button class="btn btn-primary" id="saveLog" style="width:fit-content">💾 Simpan Log</button>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">📋 Riwayat Latihan</div>
+    <div id="logList"><div style="text-align:center;color:var(--muted);font-size:13px;padding:20px">Belum ada log. Mulai catat latihanmu!</div></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const STEPS=[
+  {g:"⚡ Fase 1 — Fondasi & Habit (Minggu 1–4)",steps:[
+    "Ukur & foto kondisi tubuh sekarang (baseline)",
+    "Buat SMART Goal fisik yang spesifik & berdeadline",
+    "Download & print program latihan + habit tracker",
+    "Setup media afirmasi (wallpaper HP, cermin, poster)",
+    "Rancang Rewarding Strategy 4 minggu",
+    "Mulai latihan Hari A (Push + Core) — minggu pertama",
+    "Mulai latihan Hari B (Pull + Back) — minggu pertama",
+    "Mulai latihan Hari C (Legs + Cardio) — minggu pertama",
+    "Catat semua sesi di Daily Log secara rutin",
+    "Evaluasi progress di akhir minggu ke-4 (foto + timbangan)",
+  ]},
+  {g:"🔥 Fase 2 — Intensitas & Nutrisi (Minggu 5–8)",steps:[
+    "Tingkatkan rep/set dari program minggu sebelumnya",
+    "Hitung kebutuhan protein harian (1.6–2g × berat badan)",
+    "Atur meal plan mingguan sesuai panduan nutrisi",
+    "Eliminasi 1 kebiasaan makan buruk (gula/gorengan)",
+    "Konsistenkan tidur 7–9 jam/malam",
+    "Screenshot progress 14 hari pertama Fase 2",
+    "Latihan Fase 2 Week 1–2 selesai dengan konsisten",
+    "Latihan Fase 2 Week 3–4 selesai dengan konsisten",
+    "Foto progres + ukur berat & lingkar perut",
+    "Evaluasi: apa yang berhasil & apa yang perlu diperbaiki",
+  ]},
+  {g:"🏆 Fase 3 — Atletis & Maintenance (Minggu 9–12)",steps:[
+    "Upgrade ke variasi gerakan yang lebih sulit (archer push-up, dll)",
+    "Tambahkan sesi cardio ringan 2x seminggu (lari/bersepeda)",
+    "Konsistenkan 3x latihan/minggu + nutrisi clean eating",
+    "Latihan Fase 3 Week 1–2 selesai konsisten",
+    "Latihan Fase 3 Week 3–4 selesai konsisten",
+    "Foto progress akhir 12 minggu — bandingkan dengan baseline",
+    "Analisa 3 bulan data log latihan",
+    "Buat maintenance plan untuk 3 bulan ke depan",
+    "Rayakan pencapaian & berikan reward besar untuk dirimu 🎉",
+    "Set SMART Goal baru untuk fase berikutnya 🚀",
+  ]}
+];
+
+let checked=JSON.parse(localStorage.getItem('fit_steps')||'[]');
+let days=JSON.parse(localStorage.getItem('fit_days')||'[]');
+let logs=JSON.parse(localStorage.getItem('fit_logs')||'[]');
+
+function saveSteps(){localStorage.setItem('fit_steps',JSON.stringify(checked))}
+function saveDays(){localStorage.setItem('fit_days',JSON.stringify(days))}
+function saveLogs(){localStorage.setItem('fit_logs',JSON.stringify(logs))}
+
+function buildCheatsheet(){
+  let num=0,html='';
+  STEPS.forEach(g=>{
+    html+=`<div class="step-group"><div class="step-group-title">${g.g}</div>`;
+    g.steps.forEach(s=>{
+      num++;
+      const done=checked.includes(num);
+      html+=`<div class="step-item${done?' done':''}" onclick="toggleStep(${num},this)">
+        <div class="step-num">${num}</div>
+        <div class="step-check">${done?'✓':''}</div>
+        <div class="step-text">${s}</div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  $('#cheatsheet').html(html);
+  updateProgress();
+}
+
+function toggleStep(n,el){
+  const idx=checked.indexOf(n);
+  if(idx>-1)checked.splice(idx,1);else checked.push(n);
+  saveSteps();
+  $(el).toggleClass('done',checked.includes(n));
+  $(el).find('.step-check').text(checked.includes(n)?'✓':'');
+  updateProgress();
+}
+
+function updateProgress(){
+  const total=30,done=checked.length,pct=Math.round(done/total*100);
+  $('#pbarFill').css('width',pct+'%');
+  $('#progressPct').text(done+' / '+total+' langkah');
+  $('#heroProgress').text(pct+'%');
+}
+
+function buildDailyChecklist(){
+  const cols=['','#f59e0b','#22c55e','#3b82f6','#8b5cf6'];
+  let html='';
+  for(let i=1;i<=28;i++){
+    const done=days.includes(i),w=Math.ceil(i/7),c=cols[w];
+    html+=`<div onclick="toggleDay(${i},this)" style="aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s;background:${done?c:'#0f1a0f'};border:1.5px solid ${done?c:'#1e3020'};color:${done?'#fff':'#64748b'}">
+      <div>${i}</div><div style="font-size:9px;opacity:.7">W${w}</div>
+    </div>`;
+  }
+  $('#dailyChecklist').html(html);
+  $('#dayCount').text(days.length+' / 28 hari konsisten');
+}
+
+function toggleDay(n){
+  const idx=days.indexOf(n);
+  if(idx>-1)days.splice(idx,1);else days.push(n);
+  saveDays();buildDailyChecklist();
+}
+
+function renderLogs(){
+  if(!logs.length){$('#logList').html('<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px">Belum ada log. Mulai catat latihanmu!</div>');return;}
+  let html='';
+  [...logs].reverse().slice(0,15).forEach(l=>{
+    html+=`<div class="log-item">
+      <div>
+        <div style="font-weight:600;font-size:13px">${l.type}</div>
+        <div style="color:var(--muted);font-size:11px;margin-top:2px">${l.note||'—'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:12px">
+        <div class="log-date">${l.date}</div>
+        <div style="font-size:11px;color:var(--accent);margin-top:2px">${l.duration} menit · ${l.energy}</div>
+      </div>
+    </div>`;
+  });
+  $('#logList').html(html);
+}
+
+// TABS
+$('.tabs').on('click','.tab',function(){
+  const t=$(this).data('tab');
+  $('.tab').removeClass('active');$(this).addClass('active');
+  $('.section').removeClass('active');$('#tab-'+t).addClass('active');
+});
+
+// SMART GOAL
+$('#generateGoal').on('click',function(){
+  const s=$('#s_specific').val().trim(),m=$('#s_measurable').val().trim(),t=$('#s_time').val().trim();
+  if(!s||!m||!t){alert('Isi minimal: Specific, Measurable, dan Time-bound');return;}
+  $('#goalText').text(`Saya yakin bisa memiliki ${s} dengan ${m} pada ${t}`);
+  $('#goalPreview').show();
+});
+$('#resetGoal').on('click',function(){$('input[id^="s_"]').val('');$('#goalPreview').hide()});
+
+// CHECKLIST
+$('#startChecklist').on('click',buildDailyChecklist);
+$('#resetChecklist').on('click',function(){
+  if(!confirm('Reset habit tracker?'))return;
+  days=[];saveDays();buildDailyChecklist();
+});
+
+// LOG
+$('#logDate').val(new Date().toISOString().split('T')[0]);
+$('#saveLog').on('click',function(){
+  const entry={
+    date:$('#logDate').val(),
+    type:$('#logType').val(),
+    duration:$('#logDuration').val()||'?',
+    energy:$('#logEnergy').val(),
+    note:$('#logNote').val().trim()
+  };
+  if(!entry.date){alert('Pilih tanggal dulu');return;}
+  logs.push(entry);saveLogs();renderLogs();
+  $('#logNote').val('');$('#logDuration').val('');
+});
+
+buildCheatsheet();buildDailyChecklist();renderLogs();updateProgress();
+</script>
+
+</body>
+</html>
