@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Atletis Tanpa Gym — E-Book</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;font-family:‘Inter’,sans-serif;color:#1a1a1a}
+
+/* CONTROLS */
+.controls{position:fixed;top:0;left:0;right:0;background:#0f0f1a;border-bottom:1px solid #2a2a4a;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;z-index:1000;gap:12px;flex-wrap:wrap}
+.ctrl-title{color:#86efac;font-size:14px;font-weight:700}
+.ctrl-btns{display:flex;gap:8px}
+.btn{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-green{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
+.btn-green:hover{opacity:.9}
+.btn-outline{background:transparent;border:1px solid #2a4a3a;color:#86efac}
+.btn-outline:hover{border-color:#22c55e}
+.page-nav{display:flex;align-items:center;gap:8px;color:#64748b;font-size:12px}
+.page-nav button{background:#1e2d1e;border:1px solid #2a4a2a;color:#86efac;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+.page-nav button:hover{background:#22c55e;color:#fff;border-color:#22c55e}
+
+/* BOOK */
+.book-wrap{margin-top:70px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:0}
+.page{width:794px;min-height:1123px;background:#fff;position:relative;overflow:hidden;margin-bottom:2px;box-shadow:0 4px 40px rgba(0,0,0,.4);display:none}
+.page.active{display:block}
+
+/* ===== COVER ===== */
+.cover{background:linear-gradient(160deg,#051a08 0%,#0a2e10 40%,#051a08 100%);min-height:1123px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.cover-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(34,197,94,.12) 0%,transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(22,163,74,.08) 0%,transparent 50%)}
+.cover-noise{position:absolute;inset:0;opacity:.03;background-image:url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 200 200’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=’.9’ numOctaves=‘4’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’/%3E%3C/svg%3E”)}
+.cover-content{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;padding:60px 56px}
+.cover-badge{display:inline-block;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#86efac;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:6px 16px;border-radius:20px;margin-bottom:32px;width:fit-content}
+.cover-eyebrow{font-size:13px;font-weight:600;color:#4ade80;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
+.cover-h1{font-family:‘Playfair Display’,serif;font-size:58px;font-weight:900;line-height:1.1;color:#fff;margin-bottom:8px}
+.cover-h1 span{background:linear-gradient(135deg,#4ade80,#86efac);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.cover-sub{font-size:18px;font-weight:400;color:rgba(255,255,255,.55);margin-top:16px;line-height:1.6;max-width:460px}
+.cover-divider{width:60px;height:3px;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:2px;margin:32px 0}
+.cover-pills{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:auto}
+.cover-pill{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 16px;color:rgba(255,255,255,.8);font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px}
+.cover-pill span{font-size:16px}
+.cover-footer{border-top:1px solid rgba(255,255,255,.08);padding-top:28px;display:flex;justify-content:space-between;align-items:center}
+.cover-author{color:rgba(255,255,255,.5);font-size:13px}
+.cover-author strong{color:#86efac;font-size:15px;display:block;margin-bottom:2px}
+.cover-edition{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#4ade80;font-size:11px;font-weight:700;padding:6px 14px;border-radius:6px}
+.cover-big-icon{position:absolute;right:-20px;top:50%;transform:translateY(-50%);font-size:320px;opacity:.04;line-height:1}
+
+/* ===== INNER PAGES ===== */
+.page-inner{padding:64px 60px;min-height:1123px;display:flex;flex-direction:column}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:48px;padding-bottom:16px;border-bottom:2px solid #f0fdf4}
+.ph-chapter{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#22c55e}
+.ph-num{font-size:11px;color:#94a3b8}
+
+/* CHAPTER OPENER */
+.ch-opener{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:16px;padding:40px;margin-bottom:36px;position:relative;overflow:hidden}
+.ch-opener::before{content:’’;position:absolute;right:-20px;top:-20px;width:120px;height:120px;background:rgba(34,197,94,.1);border-radius:50%}
+.ch-num{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#16a34a;margin-bottom:8px}
+.ch-title{font-family:‘Playfair Display’,serif;font-size:32px;font-weight:700;color:#14532d;line-height:1.3;margin-bottom:12px}
+.ch-desc{font-size:14px;color:#166534;line-height:1.7}
+.ch-icon{position:absolute;right:40px;top:50%;transform:translateY(-50%);font-size:64px;opacity:.3}
+
+/* CONTENT */
+h2{font-family:‘Playfair Display’,serif;font-size:24px;font-weight:700;color:#14532d;margin:32px 0 14px}
+h3{font-size:15px;font-weight:700;color:#1a1a1a;margin:24px 0 10px;display:flex;align-items:center;gap:8px}
+h3::before{content:’’;display:inline-block;width:4px;height:16px;background:#22c55e;border-radius:2px}
+p{font-size:13px;line-height:1.8;color:#374151;margin-bottom:12px}
+.lead{font-size:15px;color:#166534;font-weight:500;line-height:1.7;margin-bottom:20px;padding-left:16px;border-left:3px solid #22c55e}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:12px}
+th{background:#14532d;color:#fff;padding:10px 14px;text-align:left;font-weight:600;font-size:11px;letter-spacing:.5px}
+th:first-child{border-radius:8px 0 0 0}th:last-child{border-radius:0 8px 0 0}
+td{padding:9px 14px;border-bottom:1px solid #f0fdf4;color:#374151}
+tr:nth-child(even) td{background:#f9fffe}
+tr:last-child td{border-bottom:none}
+
+/* SMART BOX */
+.smart-box{display:grid;gap:10px;margin:16px 0}
+.smart-row{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+.smart-letter{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.smart-content{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px}
+.smart-content strong{font-size:12px;color:#14532d;display:block;margin-bottom:3px}
+.smart-content span{font-size:11px;color:#166534;line-height:1.5}
+
+/* PILLS */
+.pill-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.pill-card{border-radius:12px;padding:18px;border:1px solid}
+.pill-m{background:#fffbeb;border-color:#fde68a}
+.pill-r{background:#f0fdf4;border-color:#bbf7d0}
+.pill-a{background:#eff6ff;border-color:#bfdbfe}
+.pill-icon{font-size:24px;margin-bottom:8px}
+.pill-name{font-size:13px;font-weight:700;margin-bottom:4px}
+.pill-desc{font-size:11px;color:#6b7280;line-height:1.5}
+
+/* WORKOUT */
+.workout-card{background:#f8fffe;border:1px solid #d1fae5;border-radius:12px;padding:20px;margin-bottom:14px}
+.wc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.wc-day{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#16a34a}
+.wc-name{font-size:15px;font-weight:700;color:#14532d;margin-top:2px}
+.wc-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ecfdf5;font-size:12px;color:#374151}
+.wc-row:last-child{border:none}
+.wc-sets{background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px}
+
+/* CALLOUT */
+.callout{border-radius:10px;padding:16px 20px;margin:16px 0;display:flex;gap:12px;align-items:flex-start;font-size:12px;line-height:1.6}
+.callout-warn{background:#fffbeb;border-left:4px solid #f59e0b}
+.callout-info{background:#eff6ff;border-left:4px solid #3b82f6}
+.callout-tip{background:#f0fdf4;border-left:4px solid #22c55e}
+.callout strong{display:block;margin-bottom:3px;font-size:12px}
+
+/* CHEATSHEET */
+.cs-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f0f4f0;align-items:flex-start}
+.cs-num{width:28px;height:28px;border-radius:6px;background:#f0fdf4;border:1px solid #bbf7d0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#16a34a;flex-shrink:0}
+.cs-text{font-size:12px;color:#374151;padding-top:5px;line-height:1.5}
+.cs-check{width:18px;height:18px;border-radius:4px;border:1.5px solid #d1d5db;flex-shrink:0;margin-top:5px}
+
+/* NUTRITION */
+.nut-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.nut-card{background:#f8fffe;border:1px solid #d1fae5;border-radius:10px;padding:14px}
+.nut-icon{font-size:20px;margin-bottom:6px}
+.nut-title{font-size:12px;font-weight:700;margin-bottom:4px;color:#14532d}
+.nut-desc{font-size:11px;color:#6b7280;line-height:1.5}
+
+/* REWARD TABLE */
+.reward-table{width:100%;margin:14px 0}
+.rt-row{display:grid;grid-template-columns:80px 1fr 140px;gap:0;border-bottom:1px solid #f0fdf4}
+.rt-row.header{background:#14532d}
+.rt-cell{padding:10px 14px;font-size:12px;color:#374151}
+.rt-row.header .rt-cell{color:#fff;font-weight:700;font-size:11px}
+.rt-week{background:#dcfce7;color:#166534;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;display:inline-block}
+.rt-row:nth-child(even){background:#f9fffe}
+
+/* QUOTE PULL */
+.pull-quote{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:12px;padding:28px 32px;margin:24px 0;text-align:center}
+.pq-text{font-family:‘Playfair Display’,serif;font-size:18px;font-style:italic;color:#14532d;line-height:1.6;margin-bottom:10px}
+.pq-author{font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:1px}
+
+/* BACK COVER */
+.back-cover{background:linear-gradient(160deg,#051a08 0%,#0a2e10 60%,#051a08 100%);min-height:1123px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;position:relative;overflow:hidden}
+.bc-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(34,197,94,.08) 0%,transparent 70%)}
+.bc-content{position:relative;z-index:2;text-align:center;max-width:500px}
+.bc-icon{font-size:64px;margin-bottom:24px}
+.bc-title{font-family:‘Playfair Display’,serif;font-size:28px;font-weight:700;color:#fff;margin-bottom:16px;line-height:1.4}
+.bc-desc{font-size:14px;color:rgba(255,255,255,.6);line-height:1.8;margin-bottom:32px}
+.bc-features{display:grid;gap:12px;text-align:left;margin-bottom:40px}
+.bc-feat{display:flex;gap:12px;align-items:flex-start}
+.bc-feat-icon{color:#4ade80;font-size:16px;margin-top:2px;flex-shrink:0}
+.bc-feat-text{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5}
+.bc-price{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(22,163,74,.1));border:1px solid rgba(34,197,94,.3);border-radius:16px;padding:24px 36px;margin-top:8px}
+.bc-price-label{font-size:11px;color:#4ade80;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}
+.bc-price-num{font-family:‘Playfair Display’,serif;font-size:48px;font-weight:900;color:#fff}
+.bc-price-sub{font-size:12px;color:rgba(255,255,255,.4)}
+
+/* PAGE FOOTER */
+.page-footer{margin-top:auto;padding-top:24px;border-top:1px solid #f0fdf4;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#94a3b8}
+.pf-brand{color:#22c55e;font-weight:700}
+
+@media print{
+.controls{display:none!important}
+.book-wrap{margin-top:0;padding:0;gap:0}
+.page{display:block!important;box-shadow:none;margin:0;page-break-after:always}
+body{background:#fff}
+}
+</style>
+
+</head>
+<body>
+
+<div class="controls">
+  <div class="ctrl-title">💪 E-Book: Atletis Tanpa Gym</div>
+  <div class="ctrl-btns">
+    <button class="btn btn-outline" onclick="prevPage()">← Prev</button>
+    <div class="page-nav"><span id="pageInfo">1 / 8</span></div>
+    <button class="btn btn-outline" onclick="nextPage()">Next →</button>
+    <button class="btn btn-green" onclick="window.print()">🖨️ Download / Print PDF</button>
+  </div>
+</div>
+
+<div class="book-wrap" id="bookWrap">
+
+<!-- PAGE 1: COVER -->
+
+<div class="page cover active" id="p1">
+  <div class="cover-bg"></div>
+  <div class="cover-noise"></div>
+  <div class="cover-big-icon">💪</div>
+  <div class="cover-content">
+    <div class="cover-badge">📘 Panduan Lengkap · Self Development Series</div>
+    <div class="cover-eyebrow">Sistem 12 Minggu Terstruktur</div>
+    <div class="cover-h1">Atletis<br><span>Tanpa Gym</span></div>
+    <div style="font-family:'Playfair Display',serif;font-size:22px;color:rgba(255,255,255,.4);margin-top:-4px;font-style:italic">Dari Nol Sampai Atletis di Rumah Sendiri</div>
+    <div class="cover-sub">Panduan lengkap calisthenics, nutrisi, dan mindset produktif untuk membentuk tubuh atletis — tanpa gym, tanpa alat mahal, tanpa alasan.</div>
+    <div class="cover-divider"></div>
+    <div class="cover-pills">
+      <div class="cover-pill"><span>🎯</span> SMART Goal System</div>
+      <div class="cover-pill"><span>💪</span> Program 3x/Minggu</div>
+      <div class="cover-pill"><span>🥗</span> Panduan Nutrisi Lengkap</div>
+      <div class="cover-pill"><span>✅</span> Cheatsheet 30 Langkah</div>
+      <div class="cover-pill"><span>🎁</span> Rewarding Strategy</div>
+    </div>
+    <div class="cover-footer">
+      <div class="cover-author">
+        <strong>FitSystem Indonesia</strong>
+        Self Development · Health & Fitness
+      </div>
+      <div class="cover-edition">Edisi 1.0 — 2025</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: DAFTAR ISI + INTRO -->
+
+<div class="page" id="p2">
+  <div class="page-inner">
+    <div class="page-header"><div class="ph-chapter">Daftar Isi & Pengantar</div><div class="ph-num">hal. 2</div></div>
+
+```
+<div class="ch-opener">
+  <div class="ch-num">Pengantar</div>
+  <div class="ch-title">Kenapa Kamu<br>Bisa Atletis Tanpa Gym</div>
+  <div class="ch-desc">Ribuan orang membuktikan: gym bukan syarat wajib. Yang wajib adalah sistem yang benar, konsistensi yang terjaga, dan mindset yang tidak mudah menyerah.</div>
+  <div class="ch-icon">🏆</div>
+</div>
+
+<p class="lead">E-book ini bukan sekadar kumpulan gerakan — ini adalah sistem lengkap yang menggabungkan produktivitas, latihan, dan nutrisi dalam satu framework yang terbukti.</p>
+
+<h2>Daftar Isi</h2>
+<table>
+  <tr><th>Bab</th><th>Judul</th><th>Hal</th></tr>
+  <tr><td>1</td><td>3 Fondasi: Motivation, Reward & Agility</td><td>3</td></tr>
+  <tr><td>2</td><td>SMART Goal System — Buat Target yang Membakar</td><td>4</td></tr>
+  <tr><td>3</td><td>Program Calisthenics 12 Minggu</td><td>5</td></tr>
+  <tr><td>4</td><td>Panduan Nutrisi Atletis</td><td>6</td></tr>
+  <tr><td>5</td><td>Rewarding Strategy — Reward Tanpa Anggaran</td><td>7</td></tr>
+  <tr><td>6</td><td>Cheatsheet 30 Langkah</td><td>8</td></tr>
+</table>
+
+<div class="callout callout-tip">
+  <span style="font-size:18px">💡</span>
+  <div><strong>Cara terbaik membaca e-book ini:</strong> Baca berurutan. Setiap bab membangun fondasi bab berikutnya. Jangan loncat ke program latihan sebelum kamu punya SMART Goal yang jelas.</div>
+</div>
+
+<div class="pull-quote">
+  <div class="pq-text">"The groundwork of all happiness is health."</div>
+  <div class="pq-author">— Leigh Hunt</div>
+</div>
+
+<div class="page-footer">
+  <div class="pf-brand">Atletis Tanpa Gym © 2025</div>
+  <div>FitSystem Indonesia</div>
+  <div>hal. 2</div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- PAGE 3: 3 FONDASI -->
+
+<div class="page" id="p3">
+  <div class="page-inner">
+    <div class="page-header"><div class="ph-chapter">Bab 1 — 3 Fondasi Produktivitas Fitness</div><div class="ph-num">hal. 3</div></div>
+
+```
+<div class="ch-opener">
+  <div class="ch-num">Bab 01</div>
+  <div class="ch-title">3 Suplemen<br>Produktivitas Fitness</div>
+  <div class="ch-desc">Sebelum mulai latihan pertama, kamu harus memiliki ketiga fondasi ini. Tanpanya, semua program latihan akan sia-sia dalam 2 minggu.</div>
+  <div class="ch-icon">💊</div>
+</div>
+
+<p class="lead">Kebanyakan orang gagal bukan karena program latihannya salah — tapi karena tidak punya sistem untuk tetap konsisten. Inilah 3 "suplemen" yang mengatasinya.</p>
+
+<div class="pill-grid">
+  <div class="pill-card pill-m">
+    <div class="pill-icon">💡</div>
+    <div class="pill-name">Motivation Pills</div>
+    <div class="pill-desc">SMART Goal yang spesifik & berdeadline. Bukan "mau sehat" tapi "BB 68kg pada Oktober 2025".</div>
+  </div>
+  <div class="pill-card pill-r">
+    <div class="pill-icon">🎁</div>
+    <div class="pill-name">Rewarding Pills</div>
+    <div class="pill-desc">Jadikan junk food & hari malas sebagai reward mingguan yang harus diraih — bukan pelarian harian.</div>
+  </div>
+  <div class="pill-card pill-a">
+    <div class="pill-icon">⚡</div>
+    <div class="pill-name">Agility Pills</div>
+    <div class="pill-desc">Ikuti cheatsheet 30 langkah. Jangan random. Setiap step ada tujuannya. Sistem adalah mentormu.</div>
+  </div>
+</div>
+
+<h3>Mengapa 3 Fondasi Ini Wajib?</h3>
+<p>Bayangkan kamu ingin pergi ke tempat tujuan dengan ojek online. Kalau kamu bilang "ke Jakarta" tanpa alamat jelas — tidak akan pernah sampai. Otak bekerja sama persis. Semakin spesifik instruksi yang kamu berikan pada dirimu sendiri, semakin efektif tubuh bergerak ke arah tujuan itu.</p>
+
+<table>
+  <tr><th>Kondisi</th><th>Tanpa 3 Fondasi</th><th>Dengan 3 Fondasi</th></tr>
+  <tr><td>Minggu 1</td><td>Semangat tinggi</td><td>Semangat + arah jelas</td></tr>
+  <tr><td>Minggu 2</td><td>Mulai malas</td><td>Masih konsisten (reward week 2)</td></tr>
+  <tr><td>Minggu 4</td><td>Sudah berhenti</td><td>Mencapai milestone pertama</td></tr>
+  <tr><td>Bulan 3</td><td>Menyesal & mulai lagi</td><td>Tubuh mulai berubah nyata</td></tr>
+</table>
+
+<div class="callout callout-warn">
+  <span style="font-size:18px">⚠️</span>
+  <div><strong>Peringatan:</strong> Jangan lanjut ke bab berikutnya sebelum kamu memiliki ketiga fondasi ini secara tertulis. Membaca tanpa action = tidak ada perubahan.</div>
+</div>
+
+<div class="page-footer">
+  <div class="pf-brand">Atletis Tanpa Gym © 2025</div>
+  <div>FitSystem Indonesia</div>
+  <div>hal. 3</div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- PAGE 4: SMART GOAL -->
+
+<div class="page" id="p4">
+  <div class="page-inner">
+    <div class="page-header"><div class="ph-chapter">Bab 2 — SMART Goal System</div><div class="ph-num">hal. 4</div></div>
+
+```
+<div class="ch-opener">
+  <div class="ch-num">Bab 02</div>
+  <div class="ch-title">Buat Target yang<br>Benar-Benar Membakar</div>
+  <div class="ch-desc">Punya motivasi tapi masih malas? Berarti ada yang salah di cara kamu merancang goals. Bukan salah orangnya — salah sistemnya.</div>
+  <div class="ch-icon">🎯</div>
+</div>
+
+<p class="lead">SMART bukan sekadar singkatan. Ini adalah cara otak menerima instruksi. Semakin SMART goals-mu, semakin efisien otakmu bekerja menuju tujuan tersebut.</p>
+
+<div class="smart-box">
+  <div class="smart-row">
+    <div class="smart-letter">S</div>
+    <div class="smart-content"><strong>Specific — Apa tepatnya yang kamu inginkan?</strong><span>❌ "Mau kurus" &nbsp;→&nbsp; ✅ "Ingin badan atletis dengan perut rata dan bahu proporsional"</span></div>
+  </div>
+  <div class="smart-row">
+    <div class="smart-letter">M</div>
+    <div class="smart-content"><strong>Measurable — Berapa angka targetmu?</strong><span>❌ "Mau langsing" &nbsp;→&nbsp; ✅ "Berat badan 68 kg, body fat 15%, push-up 25x"</span></div>
+  </div>
+  <div class="smart-row">
+    <div class="smart-letter">A</div>
+    <div class="smart-content"><strong>Attainable — Realistis dalam 8–12 minggu?</strong><span>Mulai dari target kecil yang bisa dicapai. Setelah berhasil, besarkan. Kegagalan awal = motivasi padam.</span></div>
+  </div>
+  <div class="smart-row">
+    <div class="smart-letter">R</div>
+    <div class="smart-content"><strong>Relevant — Benar-benar kamu inginkan?</strong><span>Bukan karena tren atau ikut-ikutan. Alasan yang kuat = motivasi yang tahan lama.</span></div>
+  </div>
+  <div class="smart-row">
+    <div class="smart-letter">T</div>
+    <div class="smart-content"><strong>Time-bound — Kapan deadline-nya?</strong><span>❌ "Suatu hari nanti" &nbsp;→&nbsp; ✅ "Pada Oktober 2025"</span></div>
+  </div>
+</div>
+
+<h3>Contoh SMART Goal yang Tepat</h3>
+<div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:20px;text-align:center;margin:12px 0">
+  <div style="font-size:11px;color:#16a34a;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🎯 Contoh SMART Goal</div>
+  <div style="font-family:'Playfair Display',serif;font-size:17px;color:#14532d;line-height:1.7">"Saya akan memiliki badan atletis dengan berat 68kg dan bisa push-up 25x pada Oktober 2025 — agar saya lebih percaya diri dan berenergi setiap hari."</div>
+</div>
+
+<h3>Media Afirmasi — WAJIB Dipasang</h3>
+<table>
+  <tr><th>Media</th><th>Cara Pasang</th><th>Prioritas</th></tr>
+  <tr><td>📱 Wallpaper HP</td><td>Foto goal + teks SMART Goal</td><td>🔴 Wajib</td></tr>
+  <tr><td>💻 Wallpaper PC</td><td>Desain di Canva, download PNG</td><td>🔴 Wajib</td></tr>
+  <tr><td>💬 WA / Telegram</td><td>Set sebagai wallpaper chat</td><td>🔴 Wajib</td></tr>
+  <tr><td>🖼️ Poster dinding</td><td>Print A4, tempel arah pandang saat bangun</td><td>🟡 Sangat disarankan</td></tr>
+</table>
+
+<div class="page-footer">
+  <div class="pf-brand">Atletis Tanpa Gym © 2025</div>
+  <div>FitSystem Indonesia</div>
+  <div>hal. 4</div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- PAGE 5: PROGRAM LATIHAN -->
+
+<div class="page" id="p5">
+  <div class="page-inner">
+    <div class="page-header"><div class="ph-chapter">Bab 3 — Program Calisthenics 12 Minggu</div><div class="ph-num">hal. 5</div></div>
+
+```
+<div class="ch-opener">
+  <div class="ch-num">Bab 03</div>
+  <div class="ch-title">Program Latihan<br>3x Seminggu</div>
+  <div class="ch-desc">Calisthenics adalah seni menggunakan berat badan sendiri sebagai beban. Tidak butuh gym, tidak butuh alat mahal. Hanya butuh lantai dan tekad.</div>
+  <div class="ch-icon">🏋️</div>
+</div>
+
+<p class="lead">Latihan 3x/minggu dengan pemulihan cukup terbukti lebih efektif daripada latihan setiap hari tanpa program. Kunci: progressive overload — tambah beban setiap minggu.</p>
+
+<div class="workout-card">
+  <div class="wc-header"><div><div class="wc-day">Hari A · Senin atau Kamis</div><div class="wc-name">🔥 Push Day — Dada, Bahu, Trisep, Core</div></div></div>
+  <div class="wc-row"><span>Push-up (variasi sesuai level)</span><span class="wc-sets">3–4 × 8–15 rep</span></div>
+  <div class="wc-row"><span>Pike Push-up (bahu)</span><span class="wc-sets">3 × 8–12 rep</span></div>
+  <div class="wc-row"><span>Tricep Dips (kursi / dipan)</span><span class="wc-sets">3 × 10–15 rep</span></div>
+  <div class="wc-row"><span>Plank</span><span class="wc-sets">3 × 30–60 detik</span></div>
+  <div class="wc-row"><span>Hollow Body Hold</span><span class="wc-sets">3 × 20–30 detik</span></div>
+</div>
+
+<div class="workout-card">
+  <div class="wc-header"><div><div class="wc-day">Hari B · Rabu atau Sabtu</div><div class="wc-name">💎 Pull Day — Punggung, Bisep, Grip</div></div></div>
+  <div class="wc-row"><span>Pull-up / Australian Pull-up</span><span class="wc-sets">3–4 × 5–10 rep</span></div>
+  <div class="wc-row"><span>Inverted Row (meja / tiang)</span><span class="wc-sets">3 × 10–15 rep</span></div>
+  <div class="wc-row"><span>Superman Hold</span><span class="wc-sets">3 × 15 rep</span></div>
+  <div class="wc-row"><span>Dead Hang</span><span class="wc-sets">3 × 20–40 detik</span></div>
+</div>
+
+<div class="workout-card">
+  <div class="wc-header"><div><div class="wc-day">Hari C · Jumat atau Minggu</div><div class="wc-name">⚡ Leg Day + Cardio — Kaki, Glutes, Kondisi</div></div></div>
+  <div class="wc-row"><span>Squat (variasi)</span><span class="wc-sets">4 × 15–20 rep</span></div>
+  <div class="wc-row"><span>Bulgarian Split Squat</span><span class="wc-sets">3 × 10 rep/kaki</span></div>
+  <div class="wc-row"><span>Glute Bridge</span><span class="wc-sets">3 × 15–20 rep</span></div>
+  <div class="wc-row"><span>Jumping Jack / Jump Squat</span><span class="wc-sets">3 × 30 detik</span></div>
+  <div class="wc-row"><span>Burpee</span><span class="wc-sets">3 × 8–10 rep</span></div>
+</div>
+
+<table>
+  <tr><th>Level</th><th>Minggu</th><th>Fokus</th><th>Istirahat antar set</th></tr>
+  <tr><td>🟡 Pemula</td><td>1–4</td><td>Teknik & full ROM</td><td>90 detik</td></tr>
+  <tr><td>🟢 Menengah</td><td>5–8</td><td>Tambah rep & set</td><td>60 detik</td></tr>
+  <tr><td>🔵 Lanjutan</td><td>9–12</td><td>Variasi harder</td><td>45 detik</td></tr>
+</table>
+
+<div class="page-footer">
+  <div class="pf-brand">Atletis Tanpa Gym © 2025</div>
+  <div>FitSystem Indonesia</div>
+  <div>hal. 5</div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- PAGE 6: NUTRISI + REWARD -->
+
+<div class="page" id="p6">
+  <div class="page-inner">
+    <div class="page-header"><div class="ph-chapter">Bab 4 & 5 — Nutrisi & Rewarding Strategy</div><div class="ph-num">hal. 6</div></div>
+
+```
+<div class="ch-opener" style="padding:28px 32px">
+  <div class="ch-num">Bab 04 & 05</div>
+  <div class="ch-title">Makan Benar &<br>Reward Tanpa Boros</div>
+  <div class="ch-desc">80% hasil fisik ditentukan nutrisi. Dan tanpa reward strategy yang benar, konsistensimu hanya bertahan 2 minggu.</div>
+  <div class="ch-icon">🥗</div>
+</div>
+
+<h3>Prinsip Nutrisi Atletis</h3>
+<div class="nut-grid">
+  <div class="nut-card"><div class="nut-icon">🥩</div><div class="nut-title">Protein — Prioritas #1</div><div class="nut-desc">1.6–2g/kg BB/hari. Sumber: telur, ayam, ikan, tempe, tahu, susu rendah lemak.</div></div>
+  <div class="nut-card"><div class="nut-icon">🍚</div><div class="nut-title">Karbohidrat — Bahan Bakar</div><div class="nut-desc">Nasi, oat, ubi, pisang. Terbesar sebelum dan sesudah latihan.</div></div>
+  <div class="nut-card"><div class="nut-icon">🥑</div><div class="nut-title">Lemak Sehat</div><div class="nut-desc">Alpukat, kacang, ikan salmon. Penting untuk hormon anabolik & pemulihan.</div></div>
+  <div class="nut-card"><div class="nut-icon">💧</div><div class="nut-title">Hidrasi</div><div class="nut-desc">Min. 2.5–3 liter/hari. Dehidrasi 2% = performa turun 20%.</div></div>
+  <div class="nut-card"><div class="nut-icon">😴</div><div class="nut-title">Tidur — Suplemen Gratis</div><div class="nut-desc">7–9 jam/malam. Otot tumbuh saat tidur, bukan saat latihan.</div></div>
+  <div class="nut-card"><div class="nut-icon">🚫</div><div class="nut-title">Minimalisir</div><div class="nut-desc">Gula berlebih, gorengan rutin, minuman manis, alkohol.</div></div>
+</div>
+
+<div class="callout callout-warn" style="margin:10px 0 18px">
+  <span>⚠️</span>
+  <div><strong>Rule #1 Nutrisi:</strong> Kamu tidak bisa outrun a bad diet. Latihan tanpa nutrisi tepat seperti ban bocor yang terus dipompa.</div>
+</div>
+
+<h3>Rewarding Strategy — 4 Minggu</h3>
+<p style="margin-bottom:10px">Hilangkan 4 "distraksi makan/kebiasaan buruk" dari hidupmu, lalu jadikan sebagai reward bertingkat:</p>
+<div class="reward-table">
+  <div class="rt-row header"><div class="rt-cell">Week</div><div class="rt-cell">Contoh Reward</div><div class="rt-cell">Syarat Mendapat</div></div>
+  <div class="rt-row"><div class="rt-cell"><span class="rt-week">Week 1</span></div><div class="rt-cell">Makan junk food favorit 1x</div><div class="rt-cell">7 hari latihan konsisten</div></div>
+  <div class="rt-row"><div class="rt-cell"><span class="rt-week">Week 2</span></div><div class="rt-cell">Skip 1 sesi latihan (rest aktif)</div><div class="rt-cell">14 hari konsisten</div></div>
+  <div class="rt-row"><div class="rt-cell"><span class="rt-week">Week 3</span></div><div class="rt-cell">Nonton film / gaming seharian</div><div class="rt-cell">21 hari konsisten</div></div>
+  <div class="rt-row"><div class="rt-cell"><span class="rt-week">Week 4</span></div><div class="rt-cell">Beli outfit olahraga baru</div><div class="rt-cell">28 hari konsisten</div></div>
+</div>
+
+<div class="callout callout-tip">
+  <span>💡</span>
+  <div><strong>Aturan bolong:</strong> Bolong 1 hari tanpa alasan = ulang dari awal minggu itu. Sakit = masih ditoleransi. Checkpoint boleh digunakan jika tidak kuat mulai dari awal.</div>
+</div>
+
+<div class="page-footer">
+  <div class="pf-brand">Atletis Tanpa Gym © 2025</div>
+  <div>FitSystem Indonesia</div>
+  <div>hal. 6</div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- PAGE 7: CHEATSHEET -->
+
+<div class="page" id="p7">
+  <div class="page-inner">
+    <div class="page-header"><div class="ph-chapter">Bab 6 — Cheatsheet 30 Langkah</div><div class="ph-num">hal. 7</div></div>
+
+```
+<div class="ch-opener" style="padding:24px 28px;margin-bottom:24px">
+  <div class="ch-num">Cheatsheet</div>
+  <div class="ch-title" style="font-size:26px">30 Langkah Menuju<br>Tubuh Atletis</div>
+  <div class="ch-desc">Ceklis setiap langkah. Jangan loncat. Ini adalah peta jalanmu.</div>
+  <div class="ch-icon">✅</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">
+  <div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#16a34a;margin-bottom:10px;border-bottom:1px solid #d1fae5;padding-bottom:6px">⚡ Fase 1 — Fondasi (Minggu 1–4)</div>
+    ${[
+      "Ukur & foto kondisi tubuh sekarang",
+      "Buat SMART Goal fisik yang spesifik",
+      "Print program latihan + habit tracker",
+      "Pasang media afirmasi di semua layar",
+      "Rancang Rewarding Strategy 4 minggu",
+      "Latihan Hari A — minggu pertama",
+      "Latihan Hari B — minggu pertama",
+      "Latihan Hari C — minggu pertama",
+      "Catat semua sesi di Daily Log",
+      "Evaluasi progress akhir minggu ke-4"
+    ].map((s,i)=>`<div class="cs-item"><div class="cs-check"></div><div class="cs-num">${i+1}</div><div class="cs-text">${s}</div></div>`).join('')}
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#3b82f6;margin:16px 0 10px;border-bottom:1px solid #dbeafe;padding-bottom:6px">🔥 Fase 2 — Intensitas (Minggu 5–8)</div>
+    ${[
+      "Tingkatkan rep/set dari minggu sebelumnya",
+      "Hitung kebutuhan protein harian",
+      "Atur meal plan mingguan",
+      "Eliminasi 1 kebiasaan makan buruk",
+      "Konsistenkan tidur 7–9 jam/malam"
+    ].map((s,i)=>`<div class="cs-item"><div class="cs-check"></div><div class="cs-num">${i+11}</div><div class="cs-text">${s}</div></div>`).join('')}
+  </div>
+  <div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#3b82f6;margin-bottom:10px;border-bottom:1px solid #dbeafe;padding-bottom:6px">🔥 Fase 2 — Lanjutan</div>
+    ${[
+      "Screenshot progress 14 hari pertama",
+      "Fase 2 Week 1–2 selesai konsisten",
+      "Fase 2 Week 3–4 selesai konsisten",
+      "Foto progres + ukur berat & lingkar perut",
+      "Evaluasi: apa yang berhasil & yang perlu diperbaiki"
+    ].map((s,i)=>`<div class="cs-item"><div class="cs-check"></div><div class="cs-num">${i+16}</div><div class="cs-text">${s}</div></div>`).join('')}
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;margin:16px 0 10px;border-bottom:1px solid #ede9fe;padding-bottom:6px">🏆 Fase 3 — Atletis (Minggu 9–12)</div>
+    ${[
+      "Upgrade ke gerakan lebih sulit",
+      "Tambah cardio ringan 2x/minggu",
+      "Konsistenkan 3x latihan + clean eating",
+      "Fase 3 Week 1–2 selesai konsisten",
+      "Fase 3 Week 3–4 selesai konsisten",
+      "Foto akhir — bandingkan dengan baseline",
+      "Analisa 3 bulan data log latihan",
+      "Buat maintenance plan 3 bulan ke depan",
+      "Rayakan pencapaian — berikan reward besar 🎉",
+      "Set SMART Goal baru untuk fase berikutnya 🚀"
+    ].map((s,i)=>`<div class="cs-item"><div class="cs-check"></div><div class="cs-num">${i+21}</div><div class="cs-text">${s}</div></div>`).join('')}
+  </div>
+</div>
+
+<div class="page-footer">
+  <div class="pf-brand">Atletis Tanpa Gym © 2025</div>
+  <div>FitSystem Indonesia</div>
+  <div>hal. 7</div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- PAGE 8: BACK COVER -->
+
+<div class="page back-cover" id="p8">
+  <div class="bc-bg"></div>
+  <div class="bc-content">
+    <div class="bc-icon">💪</div>
+    <div class="bc-title">Siap Mulai Perjalanan<br>Menuju Tubuh Atletismu?</div>
+    <div class="bc-desc">E-book ini adalah peta jalanmu. Tapi peta tidak berguna kalau tidak digunakan. Mulai hari ini. Mulai dari langkah #1.</div>
+    <div class="bc-features">
+      <div class="bc-feat"><div class="bc-feat-icon">✅</div><div class="bc-feat-text"><strong style="color:#86efac">Sistem 3 Fondasi</strong> — Motivation, Reward & Agility Pills yang terbukti menjaga konsistensi</div></div>
+      <div class="bc-feat"><div class="bc-feat-icon">✅</div><div class="bc-feat-text"><strong style="color:#86efac">Program Calisthenics 12 Minggu</strong> — Terstruktur, progresif, bisa dilakukan di mana saja</div></div>
+      <div class="bc-feat"><div class="bc-feat-icon">✅</div><div class="bc-feat-text"><strong style="color:#86efac">Panduan Nutrisi Lengkap</strong> — Protein, karbo, lemak, tidur, meal plan hemat atletis</div></div>
+      <div class="bc-feat"><div class="bc-feat-icon">✅</div><div class="bc-feat-text"><strong style="color:#86efac">Rewarding Strategy</strong> — Reward tanpa anggaran yang terbukti menjaga motivasi 4 minggu</div></div>
+      <div class="bc-feat"><div class="bc-feat-icon">✅</div><div class="bc-feat-text"><strong style="color:#86efac">Cheatsheet 30 Langkah</strong> — Dari nol sampai tubuh atletis, langkah demi langkah</div></div>
+    </div>
+    <div class="bc-price">
+      <div class="bc-price-label">Harga Panduan Ini</div>
+      <div class="bc-price-num">Rp 97K</div>
+      <div class="bc-price-sub">One-time · Akses selamanya · Versi digital</div>
+    </div>
+    <div style="margin-top:20px;font-size:11px;color:rgba(255,255,255,.3)">FitSystem Indonesia © 2025 · Atletis Tanpa Gym Edisi 1.0</div>
+  </div>
+</div>
+
+</div><!-- /book-wrap -->
+
+<script>
+let cur=1,total=8;
+function showPage(n){
+  $('.page').hide().removeClass('active');
+  $('#p'+n).show().addClass('active');
+  $('#pageInfo').text(n+' / '+total);
+  window.scrollTo(0,0);
+}
+function nextPage(){if(cur<total){cur++;showPage(cur)}}
+function prevPage(){if(cur>1){cur--;showPage(cur)}}
+$(document).on('keydown',function(e){
+  if(e.key==='ArrowRight')nextPage();
+  if(e.key==='ArrowLeft')prevPage();
+});
+</script>
+
+</body>
+</html>
