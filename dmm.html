@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fastrack DMM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0e1a;--card:#111827;--card2:#1a2235;--border:#1e2d45;
+    --accent:#6366f1;--accent2:#8b5cf6;--gold:#f59e0b;--green:#10b981;
+    --red:#ef4444;--text:#e2e8f0;--muted:#64748b;--white:#fff;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
+  /* HEADER */
+  .hero{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);padding:48px 24px 40px;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,.15) 0%,transparent 70%)}
+  .hero-badge{display:inline-block;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:16px}
+  .hero h1{font-size:clamp(24px,5vw,42px);font-weight:800;background:linear-gradient(135deg,#fff 30%,#a5b4fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.2}
+  .hero p{color:var(--muted);margin-top:8px;font-size:14px}
+  .hero-stats{display:flex;justify-content:center;gap:32px;margin-top:28px;flex-wrap:wrap}
+  .stat{text-align:center}
+  .stat-num{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+  /* PROGRESS */
+  .progress-bar-wrap{background:var(--card);border-bottom:1px solid var(--border);padding:16px 24px;position:sticky;top:0;z-index:100}
+  .progress-inner{max-width:900px;margin:0 auto}
+  .progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .progress-label{font-size:13px;font-weight:600;color:var(--text)}
+  .progress-pct{font-size:13px;font-weight:700;color:var(--accent)}
+  .pbar{height:8px;background:#1e293b;border-radius:8px;overflow:hidden}
+  .pbar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:8px;transition:width .4s ease}
+  /* TABS */
+  .tabs{display:flex;gap:4px;padding:20px 24px 0;max-width:900px;margin:0 auto;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:8px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;border-bottom:none;white-space:nowrap;transition:all .2s;color:var(--muted);background:transparent}
+  .tab.active{background:var(--card);border-color:var(--border);color:var(--white)}
+  .tab:hover:not(.active){color:var(--text);background:rgba(255,255,255,.04)}
+  /* MAIN */
+  .main{max-width:900px;margin:0 auto;padding:0 24px 48px}
+  .section{display:none;animation:fadeIn .3s ease}
+  .section.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  /* CARDS */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px}
+  .card-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .card-title{font-size:16px;font-weight:700}
+  .card-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  /* PHASE OVERVIEW */
+  .phase-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+  .phase-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden;transition:border-color .2s}
+  .phase-card:hover{border-color:var(--accent)}
+  .phase-num{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+  .phase-name{font-size:15px;font-weight:700;margin-bottom:6px}
+  .phase-desc{font-size:12px;color:var(--muted);line-height:1.5}
+  .phase-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:10px}
+  /* CHEATSHEET */
+  .step-group{margin-bottom:24px}
+  .step-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px;padding-left:4px;display:flex;align-items:center;gap:8px}
+  .step-group-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .step-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:10px;cursor:pointer;transition:all .2s;border:1px solid transparent;margin-bottom:6px}
+  .step-item:hover{background:var(--card2);border-color:var(--border)}
+  .step-item.done{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2)}
+  .step-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .2s}
+  .step-item.done .step-check{background:var(--green);border-color:var(--green);color:#fff;font-size:12px}
+  .step-num{font-size:10px;font-weight:700;color:var(--muted);width:20px;flex-shrink:0;margin-top:3px}
+  .step-text{font-size:13px;font-weight:500;line-height:1.5}
+  .step-item.done .step-text{color:var(--muted);text-decoration:line-through}
+  /* SMART GOAL */
+  .smart-row{display:grid;grid-template-columns:80px 1fr;gap:16px;align-items:start;margin-bottom:16px}
+  .smart-label{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:22px;font-weight:800;padding-top:8px}
+  .smart-content{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px}
+  .smart-title{font-size:13px;font-weight:700;margin-bottom:4px}
+  .smart-desc{font-size:12px;color:var(--muted);line-height:1.6}
+  input,textarea{width:100%;background:#0a0e1a;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;resize:vertical}
+  input:focus,textarea:focus{border-color:var(--accent)}
+  .goal-preview{background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(139,92,246,.1));border:1px solid rgba(99,102,241,.3);border-radius:12px;padding:20px;margin-top:20px;text-align:center}
+  .goal-preview-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  .goal-preview-text{font-size:16px;font-weight:700;color:#a5b4fc;line-height:1.6}
+  /* REWARD */
+  .reward-grid{display:grid;gap:10px}
+  .reward-row{display:grid;grid-template-columns:80px 1fr 100px;gap:10px;align-items:center}
+  .week-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;text-align:center}
+  .reward-days{font-size:12px;color:var(--muted);text-align:center}
+  /* WORKSHEET */
+  .ws-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+  .ws-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s;cursor:pointer}
+  .ws-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .ws-icon{font-size:24px;margin-bottom:10px}
+  .ws-title{font-size:14px;font-weight:700;margin-bottom:6px}
+  .ws-desc{font-size:12px;color:var(--muted);line-height:1.5}
+  /* BTN */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:none}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+  .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-green{background:var(--green);color:#fff}
+  /* ALERT */
+  .alert{padding:14px 16px;border-radius:10px;font-size:13px;line-height:1.6;display:flex;gap:10px;margin-bottom:16px}
+  .alert-warning{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fcd34d}
+  .alert-info{background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);color:#a5b4fc}
+  .alert-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);color:#6ee7b7}
+  /* PILLS summary */
+  .pill-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:20px}
+  .pill-card{border-radius:12px;padding:20px;border:1px solid}
+  .pill-card.motivation{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2)}
+  .pill-card.reward{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2)}
+  .pill-card.agility{background:rgba(99,102,241,.06);border-color:rgba(99,102,241,.2)}
+  .pill-emoji{font-size:28px;margin-bottom:10px}
+  .pill-name{font-size:15px;font-weight:700;margin-bottom:6px}
+  .pill-desc{font-size:12px;color:var(--muted);line-height:1.6}
+  /* QUOTE */
+  .quote-box{background:linear-gradient(135deg,rgba(15,23,42,1),rgba(30,27,75,.8));border:1px solid rgba(99,102,241,.2);border-radius:16px;padding:28px;text-align:center;margin-bottom:20px}
+  .quote-text{font-size:15px;font-style:italic;color:#c7d2fe;line-height:1.7;margin-bottom:12px}
+  .quote-author{font-size:12px;font-weight:700;color:var(--gold)}
+  @media(max-width:600px){
+    .smart-row{grid-template-columns:50px 1fr}
+    .reward-row{grid-template-columns:60px 1fr 80px}
+    .hero-stats{gap:20px}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">🚀 Ecourse</div>
+  <h1>Fastrack DMM</h1>
+  <p>Designer Melek Marketing — Jalur Cepat Menuju Penghasilan Pertamamu</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">4</div><div class="stat-label">Fase</div></div>
+    <div class="stat"><div class="stat-num">30</div><div class="stat-label">Langkah</div></div>
+    <div class="stat"><div class="stat-num">10</div><div class="stat-label">Worksheet</div></div>
+    <div class="stat"><div class="stat-num" id="heroProgress">0%</div><div class="stat-label">Progress</div></div>
+  </div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-inner">
+    <div class="progress-top">
+      <span class="progress-label">Progress Keseluruhan</span>
+      <span class="progress-pct" id="progressPct">0 / 30 langkah</span>
+    </div>
+    <div class="pbar"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" data-tab="overview">📋 Overview</div>
+  <div class="tab" data-tab="smartgoal">💡 Smart Goal</div>
+  <div class="tab" data-tab="reward">🎁 Reward</div>
+  <div class="tab" data-tab="cheatsheet">✅ Cheatsheet</div>
+  <div class="tab" data-tab="worksheet">📚 Worksheet</div>
+</div>
+
+<div class="main">
+
+  <!-- OVERVIEW -->
+
+  <div class="section active" id="tab-overview">
+    <div class="quote-box" style="margin-top:20px">
+      <div class="quote-text">"The keys to success are patience, persistence, and obsessive to details"</div>
+      <div class="quote-author">— Jeff Bezos, No. 1 Richest Person in the World</div>
+    </div>
+
+```
+<div class="alert alert-warning">
+  <span>⚠️</span>
+  <span><strong>Penting:</strong> Selesaikan setiap fase secara berurutan. Jangan loncat ke materi berikutnya sebelum tugas selesai. Urutan adalah nilai tambah utama ecourse ini.</span>
+</div>
+
+<div class="phase-grid">
+  <div class="phase-card">
+    <div class="phase-num">Fase 01</div>
+    <div class="phase-name">⚡ Produktivitas</div>
+    <div class="phase-desc">Ubah habits menjadi produktif. 3 Suplemen: Motivation, Rewarding & Agility Pills.</div>
+    <span class="phase-badge" style="background:rgba(245,158,11,.15);color:#fcd34d">Step 1–3</span>
+  </div>
+  <div class="phase-card">
+    <div class="phase-num">Fase 02</div>
+    <div class="phase-name">🧠 Belajar</div>
+    <div class="phase-desc">Perkaya mindset: branding, marketing, dan 5 mindset penting.</div>
+    <span class="phase-badge" style="background:rgba(99,102,241,.15);color:#a5b4fc">Step 4–12</span>
+  </div>
+  <div class="phase-card">
+    <div class="phase-num">Fase 03</div>
+    <div class="phase-name">📸 Rombak Instagram</div>
+    <div class="phase-desc">Implementasi penuh: username, bio, portofolio, highlight.</div>
+    <span class="phase-badge" style="background:rgba(236,72,153,.15);color:#f9a8d4">Step 13–20</span>
+  </div>
+  <div class="phase-card">
+    <div class="phase-num">Fase 04</div>
+    <div class="phase-name">📣 Promosi</div>
+    <div class="phase-desc">Ritual DMM harian 30–60 menit. Konsisten 4 minggu. Target: $2.000 pertama.</div>
+    <span class="phase-badge" style="background:rgba(16,185,129,.15);color:#6ee7b7">Step 21–30</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon" style="background:rgba(99,102,241,.15)">💊</div>
+    <div><div class="card-title">3 DMM Productivity Supplements</div><div class="card-sub">Fase 1 — Fondasi Produktivitas</div></div>
+  </div>
+  <div class="pill-grid">
+    <div class="pill-card motivation">
+      <div class="pill-emoji">💡</div>
+      <div class="pill-name">Motivation Pills</div>
+      <div class="pill-desc">Buat SMART Goal yang membakar semangat + media afirmasi di semua wallpaper.</div>
+    </div>
+    <div class="pill-card reward">
+      <div class="pill-emoji">🎁</div>
+      <div class="pill-name">Rewarding Pills</div>
+      <div class="pill-desc">Jadikan distraksi sebagai reward mingguan bertingkat — tanpa modal sama sekali.</div>
+    </div>
+    <div class="pill-card agility">
+      <div class="pill-emoji">⚡</div>
+      <div class="pill-name">Agility Pills</div>
+      <div class="pill-desc">Gunakan cheatsheet & mentor agar setiap langkah efektif dan tidak kesasar.</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon" style="background:rgba(16,185,129,.15)">📦</div>
+    <div><div class="card-title">Resource Wajib Didownload & Diprint</div><div class="card-sub">Print sekaligus — hemat kertas & tinta</div></div>
+  </div>
+  <div style="display:grid;gap:8px">
+    <div class="step-item" style="cursor:default"><div class="step-check" style="font-size:16px">📄</div><div class="step-text">Template Smart Goals (Tugas 1)</div></div>
+    <div class="step-item" style="cursor:default"><div class="step-check" style="font-size:16px">🗓️</div><div class="step-text">Rewarding Strategy (Tugas 2) — ceklis dengan pensil</div></div>
+    <div class="step-item" style="cursor:default"><div class="step-check" style="font-size:16px">✅</div><div class="step-text">Cheatsheet Fastrack DMM 30 Langkah (Tugas 3)</div></div>
+    <div class="step-item" style="cursor:default"><div class="step-check" style="font-size:16px">📚</div><div class="step-text">10 Lembar Worksheet Branding & Marketing</div></div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- SMART GOAL -->
+
+  <div class="section" id="tab-smartgoal">
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(245,158,11,.15)">🎯</div>
+        <div><div class="card-title">Buat SMART Goal-mu</div><div class="card-sub">Isi setiap komponen agar goals-mu membakar semangat</div></div>
+      </div>
+
+```
+  <div class="alert alert-info">
+    <span>💡</span>
+    <span>Otak seperti ojek online — kalau petunjuk tidak jelas, tidak akan pernah sampai. Semakin spesifik, semakin efektif otak menggerakkan dirimu.</span>
+  </div>
+
+  <div id="smartForm">
+    <div class="smart-row">
+      <div class="smart-label">S</div>
+      <div class="smart-content">
+        <div class="smart-title">Specific — Apa yang ingin kamu dapatkan?</div>
+        <div class="smart-desc">Jangan general. Contoh: "punya motor impian" bukan "banyak uang"</div>
+        <input type="text" id="s_specific" placeholder="Contoh: PC gaming, motor impian, umroh orang tua..." style="margin-top:10px">
+      </div>
+    </div>
+    <div class="smart-row">
+      <div class="smart-label">M</div>
+      <div class="smart-content">
+        <div class="smart-title">Measurable — Berapa nominalnya?</div>
+        <div class="smart-desc">Harus ada angka. "Motor Rp10 juta" lebih membakar dari "punya motor"</div>
+        <input type="text" id="s_measurable" placeholder="Contoh: Rp10.000.000 / $500..." style="margin-top:10px">
+      </div>
+    </div>
+    <div class="smart-row">
+      <div class="smart-label">A</div>
+      <div class="smart-content">
+        <div class="smart-title">Attainable — Bisa dicapai dalam 6–12 bulan?</div>
+        <div class="smart-desc">Mulai kecil, besarkan setelah berhasil. Target terlalu besar = motivasi turun di tengah</div>
+        <input type="text" id="s_attainable" placeholder="Konfirmasi: YA, bisa saya capai dalam 6-12 bulan" style="margin-top:10px">
+      </div>
+    </div>
+    <div class="smart-row">
+      <div class="smart-label">R</div>
+      <div class="smart-content">
+        <div class="smart-title">Relevant — Benar-benar kamu inginkan?</div>
+        <div class="smart-desc">Bukan karena iri tetangga. Tanya ke diri sendiri: apakah ini benar-benar kebutuhanku?</div>
+        <input type="text" id="s_relevant" placeholder="Alasan: kenapa ini penting untukmu?" style="margin-top:10px">
+      </div>
+    </div>
+    <div class="smart-row">
+      <div class="smart-label">T</div>
+      <div class="smart-content">
+        <div class="smart-title">Time-bound — Kapan deadline-nya?</div>
+        <div class="smart-desc">Harus ada tanggal. "Pada November 2025" jauh lebih kuat dari "suatu hari nanti"</div>
+        <input type="text" id="s_time" placeholder="Contoh: November 2025, Maret 2026..." style="margin-top:10px">
+      </div>
+    </div>
+  </div>
+
+  <div class="goal-preview" id="goalPreview" style="display:none">
+    <div class="goal-preview-label">🎯 SMART Goal-mu</div>
+    <div class="goal-preview-text" id="goalText">—</div>
+  </div>
+  <div style="margin-top:16px;display:flex;gap:10px">
+    <button class="btn btn-primary" id="generateGoal">✨ Generate Goal</button>
+    <button class="btn btn-outline" id="resetGoal">Reset</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon" style="background:rgba(139,92,246,.15)">📌</div>
+    <div><div class="card-title">Media Afirmasi — WAJIB</div><div class="card-sub">Agar semangat tidak padam setelah 3–7 hari</div></div>
+  </div>
+  <div style="display:grid;gap:8px">
+    <div class="step-item" id="aff1" onclick="toggleAff(this)"><div class="step-check">✓</div><div><div class="step-text">📱 Wallpaper HP — pasang sekarang</div></div></div>
+    <div class="step-item" id="aff2" onclick="toggleAff(this)"><div class="step-check">✓</div><div><div class="step-text">💻 Wallpaper PC/Laptop — pasang sekarang</div></div></div>
+    <div class="step-item" id="aff3" onclick="toggleAff(this)"><div class="step-check">✓</div><div><div class="step-text">💬 Wallpaper chat WhatsApp / Telegram</div></div></div>
+    <div class="step-item" id="aff4" onclick="toggleAff(this)"><div class="step-check">✓</div><div><div class="step-text">⭐ Poster dinding — tempel di sisi yang pertama terlihat saat bangun (sangat direkomendasikan)</div></div></div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- REWARD -->
+
+  <div class="section" id="tab-reward">
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(16,185,129,.15)">🎁</div>
+        <div><div class="card-title">Rewarding Strategy</div><div class="card-sub">Jadikan distraksi sebagai reward mingguan — zero budget</div></div>
+      </div>
+      <div class="alert alert-success">
+        <span>💡</span>
+        <span>Distraksi bukan dimusnahkan — tapi <strong>ditunda sebagai hadiah</strong>. Ini membuat otak punya sesuatu untuk dinantikan.</span>
+      </div>
+
+```
+  <div id="rewardRows">
+    <div style="display:grid;grid-template-columns:80px 1fr 110px;gap:10px;margin-bottom:8px;padding:0 2px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Week</div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Distraksi (reward)</div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;text-align:center">Syarat</div>
+    </div>
+    <div class="reward-row" id="rr1">
+      <div><div class="week-badge">Week 1</div><div class="reward-days" style="margin-top:4px">7 hari</div></div>
+      <input type="text" id="r1" placeholder="Distraksi paling urgent (misal: Facebook)" style="margin:0">
+      <div style="text-align:center;font-size:12px;color:var(--muted)">7 hari konsisten</div>
+    </div>
+    <div class="reward-row" id="rr2" style="margin-top:8px">
+      <div><div class="week-badge">Week 2</div><div class="reward-days" style="margin-top:4px">14 hari</div></div>
+      <input type="text" id="r2" placeholder="Distraksi kedua (misal: YouTube)" style="margin:0">
+      <div style="text-align:center;font-size:12px;color:var(--muted)">14 hari konsisten</div>
+    </div>
+    <div class="reward-row" id="rr3" style="margin-top:8px">
+      <div><div class="week-badge">Week 3</div><div class="reward-days" style="margin-top:4px">21 hari</div></div>
+      <input type="text" id="r3" placeholder="Distraksi ketiga (misal: Netflix)" style="margin:0">
+      <div style="text-align:center;font-size:12px;color:var(--muted)">21 hari konsisten</div>
+    </div>
+    <div class="reward-row" id="rr4" style="margin-top:8px">
+      <div><div class="week-badge">Week 4</div><div class="reward-days" style="margin-top:4px">28 hari</div></div>
+      <input type="text" id="r4" placeholder="Distraksi santai (misal: Mobile Legends)" style="margin:0">
+      <div style="text-align:center;font-size:12px;color:var(--muted)">28 hari konsisten</div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text)">📅 Checklist Harian</div>
+    <div id="dailyChecklist" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-primary" id="startChecklist">▶ Mulai Hari Ini</button>
+      <button class="btn btn-outline" id="resetChecklist">↺ Reset</button>
+      <span id="dayCount" style="font-size:12px;color:var(--muted)"></span>
+    </div>
+  </div>
+
+  <div class="alert alert-warning" style="margin-top:20px">
+    <span>⚠️</span>
+    <div>
+      <strong>Aturan Bolong:</strong><br>
+      ✅ Rekomendasi: bolong 1 hari → ulang dari awal, uninstall reward minggu itu<br>
+      🔄 Alternatif (checkpoint): ulang dari minggu terakhir yang sudah aman<br>
+      🤒 Sakit: masih ditoleransi
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- CHEATSHEET -->
+
+  <div class="section" id="tab-cheatsheet">
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(99,102,241,.15)">✅</div>
+        <div><div class="card-title">Fastrack DMM Cheatsheet</div><div class="card-sub">30 Langkah dari awal hingga $2.000 pertamamu</div></div>
+      </div>
+
+```
+  <div id="cheatsheet"></div>
+</div>
+```
+
+  </div>
+
+  <!-- WORKSHEET -->
+
+  <div class="section" id="tab-worksheet">
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(139,92,246,.15)">📚</div>
+        <div><div class="card-title">10 Lembar Worksheet</div><div class="card-sub">Tools analisis branding & marketing — isi saat tiba chapter-nya</div></div>
+      </div>
+      <div class="ws-grid">
+        <div class="ws-card"><div class="ws-icon">🎯</div><div class="ws-title">Brand Positioning Strategy</div><div class="ws-desc">List 10 skill desain → riset market → pilih niche → brand positioning statement.</div></div>
+        <div class="ws-card"><div class="ws-icon">🎭</div><div class="ws-title">Brand Personality Strategy</div><div class="ws-desc">Tentukan spektrum kepribadian brand-mu dari 13 dimensi (feminin–maskulin, dll).</div></div>
+        <div class="ws-card"><div class="ws-icon">🎨</div><div class="ws-title">Brand Visual Identity Strategy</div><div class="ws-desc">Riset 10 kompetitor → analisis warna, typeface, gaya → rancang visual identity-mu.</div></div>
+        <div class="ws-card"><div class="ws-icon">👤</div><div class="ws-title">Targeting Strategy #1</div><div class="ws-desc">Jabarkan detail pembeli potensial: demografi, goals, masalah, kebutuhan desain.</div></div>
+        <div class="ws-card"><div class="ws-icon">🔍</div><div class="ws-title">Targeting Strategy #2</div><div class="ws-desc">Riset konten yang dilihat target market + hashtag yang relevan.</div></div>
+        <div class="ws-card"><div class="ws-icon">🗺️</div><div class="ws-title">Placing & Funneling Strategy</div><div class="ws-desc">Platform promosi, media portofolio, komunikasi, transaksi, manajemen, delivery.</div></div>
+        <div class="ws-card"><div class="ws-icon">💰</div><div class="ws-title">Pricing Strategy</div><div class="ws-desc">List semua value jasa → susun paket: ekonomis, middle class, mewah.</div></div>
+        <div class="ws-card"><div class="ws-icon">🖼️</div><div class="ws-title">Portfolio Design Strategy</div><div class="ws-desc">Tentukan tipe feed Instagram + rancang konsep 12 postingan pertama.</div></div>
+        <div class="ws-card"><div class="ws-icon">🤝</div><div class="ws-title">3R Hacking Strategy</div><div class="ws-desc">List 30 akun potensial → deal dengan 10 brand/influencer → evaluasi.</div></div>
+        <div class="ws-card"><div class="ws-icon">📊</div><div class="ws-title">DMM Routine Checklist</div><div class="ws-desc">Rutinitas 4 minggu dengan 4 hashtag berbeda → analisa data → tentukan winning hashtag.</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const STEPS = [
+  {g:"⚡ Fase 1 — Produktivitas (Step 1–3)",steps:[
+    "Download & print Smart Goals DMM",
+    "Download & print Rewarding Strategy DMM",
+    "Download & print Fast Track DMM Cheatsheet",
+  ]},
+  {g:"🧠 Fase 2 — Belajar (Step 4–12)",steps:[
+    "Temukan niche yang profitable dengan cara FT-DMM (chapter #13)",
+    "Pelajari & praktekkan rules branding: Jadilah Unik",
+    "Pelajari & praktekkan rules branding: Memanusiakan Brand",
+    "Pelajari & praktekkan rules branding: Pengulangan yang Konsisten",
+    "Pelajari & praktekkan rules marketing: Kenali Market-mu",
+    "Pelajari & praktekkan rules marketing: Pahami 4P Marketing Mix",
+    "Pelajari & praktekkan rules marketing: Pahami 3R Hacking Strategy",
+    "Pelajari 5 mindset marketing penting",
+    "Riset hashtag target market-mu",
+  ]},
+  {g:"📸 Fase 3 — Rombak Instagram (Step 13–20)",steps:[
+    "Perbaiki username Instagram-mu",
+    "Perbaiki account name Instagram-mu",
+    "Dapatkan minimal 3 review dari teknik 3R Hacking Strategy",
+    "Perbaiki bio Instagram-mu",
+    "Buat & kemas 9 karya sesuai branding-mu",
+    "Persiapan & upload highlight Instagram-mu",
+    "Posting 9 karya tersebut di Instagram-mu",
+  ]},
+  {g:"📣 Fase 4 — Promosi (Step 21–30)",steps:[
+    "Lakukan DMM routine selama 7 hari ke-1",
+    "Screenshot DMM routine selama 7 hari ke-1",
+    "Lakukan DMM routine selama 7 hari ke-2",
+    "Screenshot DMM routine selama 7 hari ke-2",
+    "Lakukan DMM routine selama 7 hari ke-3",
+    "Screenshot DMM routine selama 7 hari ke-3",
+    "Lakukan DMM routine selama 7 hari ke-4",
+    "Screenshot DMM routine selama 7 hari ke-4",
+    "Buat analisa dari ke-4 data yang kamu peroleh",
+    "Lanjutkan DMM routine hingga $2.000 — dapatkan reward-mu! 🎉",
+  ]}
+];
+
+let checked = JSON.parse(localStorage.getItem('ft_steps')||'[]');
+let days = JSON.parse(localStorage.getItem('ft_days')||'[]');
+
+function saveSteps(){localStorage.setItem('ft_steps',JSON.stringify(checked))}
+function saveDays(){localStorage.setItem('ft_days',JSON.stringify(days))}
+
+function buildCheatsheet(){
+  let num=0,html='';
+  STEPS.forEach(g=>{
+    html+=`<div class="step-group"><div class="step-group-title">${g.g}</div>`;
+    g.steps.forEach(s=>{
+      num++;
+      const done=checked.includes(num);
+      html+=`<div class="step-item${done?' done':''}" onclick="toggleStep(${num},this)">
+        <div class="step-num">${num}</div>
+        <div class="step-check">${done?'✓':''}</div>
+        <div class="step-text">${s}</div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  $('#cheatsheet').html(html);
+  updateProgress();
+}
+
+function toggleStep(n,el){
+  const idx=checked.indexOf(n);
+  if(idx>-1)checked.splice(idx,1);else checked.push(n);
+  saveSteps();
+  $(el).toggleClass('done',checked.includes(n));
+  $(el).find('.step-check').text(checked.includes(n)?'✓':'');
+  updateProgress();
+}
+
+function updateProgress(){
+  const total=30,done=checked.length,pct=Math.round(done/total*100);
+  $('#pbarFill').css('width',pct+'%');
+  $('#progressPct').text(done+' / '+total+' langkah');
+  $('#heroProgress').text(pct+'%');
+}
+
+function buildDailyChecklist(){
+  let html='';
+  for(let i=1;i<=28;i++){
+    const done=days.includes(i);
+    const w=Math.ceil(i/7);
+    const colors=['','#f59e0b','#6366f1','#ec4899','#10b981'];
+    const c=colors[w];
+    html+=`<div onclick="toggleDay(${i},this)" style="
+      aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s;
+      background:${done?c:'#111827'};border:1.5px solid ${done?c:'#1e2d45'};
+      color:${done?'#fff':'#64748b'}">
+      <div>${i}</div><div style="font-size:9px;opacity:.7">W${w}</div>
+    </div>`;
+  }
+  $('#dailyChecklist').html(html);
+  $('#dayCount').text(days.length+' / 28 hari konsisten');
+}
+
+function toggleDay(n,el){
+  const idx=days.indexOf(n);
+  if(idx>-1)days.splice(idx,1);else days.push(n);
+  saveDays();
+  buildDailyChecklist();
+}
+
+function toggleAff(el){$(el).toggleClass('done');$(el).find('.step-check').text($(el).hasClass('done')?'✓':'✓')}
+
+// TABS
+$('#tabs').on('click','.tab',function(){
+  const t=$(this).data('tab');
+  $('.tab').removeClass('active');
+  $(this).addClass('active');
+  $('.section').removeClass('active');
+  $('#tab-'+t).addClass('active');
+});
+
+// SMART GOAL
+$('#generateGoal').on('click',function(){
+  const s=$('#s_specific').val().trim();
+  const m=$('#s_measurable').val().trim();
+  const t=$('#s_time').val().trim();
+  if(!s||!m||!t){alert('Isi minimal: Specific, Measurable, dan Time-bound');return;}
+  const text=`Saya yakin bisa mendapatkan ${s} seharga ${m} pada ${t}`;
+  $('#goalText').text(text);
+  $('#goalPreview').show();
+});
+$('#resetGoal').on('click',function(){
+  $('input[id^="s_"]').val('');
+  $('#goalPreview').hide();
+});
+
+// CHECKLIST
+$('#startChecklist').on('click',function(){buildDailyChecklist()});
+$('#resetChecklist').on('click',function(){
+  if(!confirm('Reset semua progress checklist harian?'))return;
+  days=[];saveDays();buildDailyChecklist();
+});
+
+// INIT
+buildCheatsheet();
+buildDailyChecklist();
+updateProgress();
+</script>
+
+</body>
+</html>
