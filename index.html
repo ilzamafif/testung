@@ -152,8 +152,7 @@
 
 <!-- Floating Add Button -->
 
-<button class="btn btn-primary btn-floating" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-  <i class="bi bi-plus-lg"></i>
+<button class="btn btn-primary btn-sm" onclick="editCategory(null)"><i class="bi bi-plus-lg"></i>
 </button>
 
 <!-- Add Expense Modal -->
@@ -434,11 +433,6 @@ function renderCategorySettings() {
   document.getElementById('categoryList').innerHTML = html;
 }
 
-function editCategory(name) {
-  openCategoryModal(name);
-  new bootstrap.Modal(document.getElementById('categoryModal')).show();
-}
-
 function openCategoryModal(editKey) {
   document.getElementById('editCategoryKey').value = editKey||'';
   document.getElementById('categoryModalTitle').textContent = editKey?'Edit Kategori':'Tambah Kategori';
@@ -458,6 +452,12 @@ function openCategoryModal(editKey) {
     document.getElementById('catIcon').value='bi-tag';
     document.getElementById('iconPreview').className='bi bi-tag';
   }
+}
+
+function editCategory(name) {
+  openCategoryModal(name);
+  const modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+  modal.show();
 }
 
 document.getElementById('catIcon').addEventListener('input', function(){
