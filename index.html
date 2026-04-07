@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -18,7 +17,7 @@
   .stat-value { font-size:1.5rem; font-weight:700; }
   .transaction-item { border-left:4px solid; transition:.3s; }
   .transaction-item:hover { background:#f8f9fa; transform:translateX(5px); }
-  .btn-floating { position:fixed; bottom:30px; right:30px; width:60px; height:60px; border-radius:50%; font-size:1.5rem; box-shadow:0 5px 20px rgba(0,0,0,.3); z-index:1000; }
+  .btn-floating { position:fixed; bottom:30px; right:30px; width:60px; height:60px; border-radius:50%; font-size:1.5rem; box-shadow:0 5px 20px rgba(0,0,0,.3); z-index:1000; display:flex; align-items:center; justify-content:center; }
   .month-selector { background:#fff; border-radius:10px; padding:10px 20px; display:inline-flex; align-items:center; gap:15px; box-shadow:0 5px 15px rgba(0,0,0,.1); }
   .chart-container { position:relative; height:300px; }
   @media(max-width:768px){ .btn-floating{bottom:20px;right:20px;width:50px;height:50px;} }
@@ -28,7 +27,6 @@
 <div class="container" style="max-width:1200px">
 
   <!-- Header -->
-
   <div class="text-center mb-4">
     <h1 class="text-white fw-bold mb-3"><i class="bi bi-wallet2"></i> Daily Expense Tracker</h1>
     <div class="month-selector">
@@ -39,7 +37,6 @@
   </div>
 
   <!-- Summary -->
-
   <div class="card mb-4">
     <div class="card-body">
       <div class="row text-center">
@@ -70,11 +67,9 @@
   </div>
 
   <!-- Category Cards -->
-
   <div class="row g-3 mb-4" id="categoryCards"></div>
 
   <!-- Tabs -->
-
   <div class="card">
     <div class="card-header">
       <ul class="nav nav-tabs card-header-tabs">
@@ -86,77 +81,71 @@
     </div>
     <div class="card-body">
       <div class="tab-content">
+        <!-- History -->
+        <div class="tab-pane fade show active" id="history">
+          <div class="mb-3 row g-2">
+            <div class="col-md-6"><select class="form-select" id="filterCategory"><option value="">Semua Kategori</option></select></div>
+            <div class="col-md-6"><input type="date" class="form-control" id="filterDate"></div>
+          </div>
+          <div id="transactionList"><p class="text-center text-muted">Belum ada transaksi</p></div>
+        </div>
 
-```
-    <!-- History -->
-    <div class="tab-pane fade show active" id="history">
-      <div class="mb-3 row g-2">
-        <div class="col-md-6"><select class="form-select" id="filterCategory"><option value="">Semua Kategori</option></select></div>
-        <div class="col-md-6"><input type="date" class="form-control" id="filterDate"></div>
-      </div>
-      <div id="transactionList"><p class="text-center text-muted">Belum ada transaksi</p></div>
-    </div>
+        <!-- Chart -->
+        <div class="tab-pane fade" id="chart">
+          <div class="btn-group mb-3">
+            <button class="btn btn-outline-primary active" data-chart="bar">Bar</button>
+            <button class="btn btn-outline-primary" data-chart="pie">Pie</button>
+          </div>
+          <div class="chart-container"><canvas id="expenseChart"></canvas></div>
+        </div>
 
-    <!-- Chart -->
-    <div class="tab-pane fade" id="chart">
-      <div class="btn-group mb-3">
-        <button class="btn btn-outline-primary active" data-chart="bar">Bar</button>
-        <button class="btn btn-outline-primary" data-chart="pie">Pie</button>
-      </div>
-      <div class="chart-container"><canvas id="expenseChart"></canvas></div>
-    </div>
+        <!-- Settings -->
+        <div class="tab-pane fade" id="settings">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Kelola Kategori</h5>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openCategoryModal()">
+              <i class="bi bi-plus"></i> Tambah Kategori
+            </button>
+          </div>
+          <div id="categoryList"></div>
+        </div>
 
-    <!-- Settings -->
-    <div class="tab-pane fade" id="settings">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">Kelola Kategori</h5>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openCategoryModal()">
-          <i class="bi bi-plus"></i> Tambah Kategori
-        </button>
-      </div>
-      <div id="categoryList"></div>
-    </div>
-
-    <!-- Export -->
-    <div class="tab-pane fade" id="export">
-      <div class="row">
-        <div class="col-md-6">
-          <h5>Export Data</h5>
-          <div class="mb-3">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="exportType" id="exportCurrent" value="current" checked>
-              <label class="form-check-label" for="exportCurrent">Bulan ini saja</label>
+        <!-- Export -->
+        <div class="tab-pane fade" id="export">
+          <div class="row">
+            <div class="col-md-6">
+              <h5>Export Data</h5>
+              <div class="mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="exportType" id="exportCurrent" value="current" checked>
+                  <label class="form-check-label" for="exportCurrent">Bulan ini saja</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="exportType" id="exportAll" value="all">
+                  <label class="form-check-label" for="exportAll">Semua data</label>
+                </div>
+              </div>
+              <button class="btn btn-primary me-2" id="exportDetailBtn"><i class="bi bi-file-earmark-spreadsheet"></i> Detail (CSV)</button>
+              <button class="btn btn-success" id="exportSummaryBtn"><i class="bi bi-file-earmark-bar-graph"></i> Summary (CSV)</button>
             </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="exportType" id="exportAll" value="all">
-              <label class="form-check-label" for="exportAll">Semua data</label>
+            <div class="col-md-6 mt-3 mt-md-0">
+              <h5>Reset Data</h5>
+              <p class="text-muted">Data akan otomatis diarsipkan tiap akhir bulan.</p>
+              <button class="btn btn-danger" id="manualResetBtn"><i class="bi bi-arrow-clockwise"></i> Reset Manual</button>
             </div>
           </div>
-          <button class="btn btn-primary me-2" id="exportDetailBtn"><i class="bi bi-file-earmark-spreadsheet"></i> Detail (CSV)</button>
-          <button class="btn btn-success" id="exportSummaryBtn"><i class="bi bi-file-earmark-bar-graph"></i> Summary (CSV)</button>
-        </div>
-        <div class="col-md-6 mt-3 mt-md-0">
-          <h5>Reset Data</h5>
-          <p class="text-muted">Data akan otomatis diarsipkan tiap akhir bulan.</p>
-          <button class="btn btn-danger" id="manualResetBtn"><i class="bi bi-arrow-clockwise"></i> Reset Manual</button>
         </div>
       </div>
     </div>
-
-  </div>
-</div>
-```
-
   </div>
 </div>
 
-<!-- Floating Add Button -->
-
-<button class="btn btn-primary btn-sm" onclick="editCategory(null)"><i class="bi bi-plus-lg"></i>
+<!-- Floating Add Button (FIXED) -->
+<button class="btn btn-primary btn-floating" onclick="openAddExpenseModal()">
+  <i class="bi bi-plus-lg"></i>
 </button>
 
 <!-- Add Expense Modal -->
-
 <div class="modal fade" id="addExpenseModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -191,7 +180,6 @@
 </div>
 
 <!-- Category Modal -->
-
 <div class="modal fade" id="categoryModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -277,6 +265,15 @@ function fmtCur(n) {
 
 function fmtDate(d) {
   return new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+}
+
+// ========== NEW: OPEN ADD EXPENSE MODAL ==========
+function openAddExpenseModal() {
+  document.getElementById('expenseDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('expenseAmount').value = '';
+  document.getElementById('expenseNote').value = '';
+  document.getElementById('expenseCategory').value = '';
+  new bootstrap.Modal(document.getElementById('addExpenseModal')).show();
 }
 
 // ========== MONTH DISPLAY ==========
@@ -473,7 +470,6 @@ document.getElementById('saveCategoryBtn').addEventListener('click', function(){
   const icon = document.getElementById('catIcon').value.trim();
   if(!name||!budget){ alert('Nama dan budget wajib diisi!'); return; }
   if(editKey && editKey!==name){
-    // rename: migrate transactions
     const allKeys = Object.keys(localStorage).filter(k=>k.startsWith('expenses_'));
     allKeys.forEach(k=>{
       const data = JSON.parse(localStorage.getItem(k)||'[]');
@@ -615,6 +611,6 @@ document.getElementById('expenseDate').value = new Date().toISOString().slice(0,
 populateCategorySelects();
 refreshAll();
 </script>
-
 </body>
 </html>
+
