@@ -425,13 +425,18 @@ function renderCategorySettings() {
             <br><small class="text-muted ms-4">Budget: ${fmtCur(cat.budget)}</small>
           </div>
           <div>
-            <button class="btn btn-sm btn-outline-primary me-1" onclick="openCategoryModal('${name}')"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="editCategory('${name}')"><i class="bi bi-pencil"></i></button>
             <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory('${name}')"><i class="bi bi-trash"></i></button>
           </div>
         </div>
       </div>`;
   });
   document.getElementById('categoryList').innerHTML = html;
+}
+
+function editCategory(name) {
+  openCategoryModal(name);
+  new bootstrap.Modal(document.getElementById('categoryModal')).show();
 }
 
 function openCategoryModal(editKey) {
